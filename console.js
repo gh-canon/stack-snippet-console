@@ -3,6 +3,7 @@
 	if (!console) window.console = {};
 
 	var _log = console.log;
+	var _info = console.info;
 	var _error = console.error;
 	var _warn = console.warn;
 	var _clear = console.clear;
@@ -24,7 +25,8 @@
     ".as-console-row:after { display: table-cell; padding: 3px 6px; color: rgba(0,0,0,.35); border: 1px solid #ccc; content: attr(data-date); }",
     ".as-console-row + .as-console-row > * { border: 1px solid #ccc; }",
     ".as-console-row-code { width: 100%; white-space: pre-wrap; padding: 3px 5px; display: table-cell; font-family: monospace; font-size: 13px; }",
-    ".as-console-error:before { content: 'Error: '; color: #f00  }",
+    ".as-console-error:before { content: 'Error: '; color: #f00; }",
+    ".as-console-info:before { content: 'Info: '; color: #00f; }",
     ".as-console-warning:before { content: 'Warning: '; color: #e90 }",
     "@-webkit-keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
     "@-moz-keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
@@ -157,6 +159,19 @@
             .children[0].classList.add("as-console-warning");
 
 		showConsole(1);
+
+	};
+
+	console.info = function () {
+
+	    var args = arguments;
+
+	    _info && _info.apply(console, args);
+
+	    createLogEntry.apply(null, args)
+            .children[0].classList.add("as-console-info");
+
+	    showConsole(1);
 
 	};
 
