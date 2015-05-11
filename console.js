@@ -20,11 +20,11 @@
 	style.type = "text/css";
 	style.textContent = [
     ".as-console-wrapper { position: fixed; bottom: 0; left: 0; right: 0; max-height: 150px; overflow-y: scroll; overflow-x: hidden; border-top: 1px solid #000; display: none; }",
-    ".as-console { background: #e9e9e9; border: 1px solid #ccc; display: table; width: 100%; counter-reset: console-row; border-collapse: collapse; }",
-    ".as-console-row { display: table-row; counter-increment: console-row; font-family: monospace; font-size: 13px; }",
-    ".as-console-row:after { display: table-cell; padding: 3px 6px; color: rgba(0,0,0,.35); border: 1px solid #ccc; content: attr(data-date); }",
+    ".as-console { background: #e9e9e9; border: 1px solid #ccc; display: table; width: 100%; border-collapse: collapse; }",
+    ".as-console-row { display: table-row; font-family: monospace; font-size: 13px; }",
+    ".as-console-row:after { display: table-cell; padding: 3px 6px; color: rgba(0,0,0,.35); border: 1px solid #ccc; content: attr(data-date); vertical-align: top; }",
     ".as-console-row + .as-console-row > * { border: 1px solid #ccc; }",
-    ".as-console-row-code { width: 100%; white-space: pre-wrap; padding: 3px 5px; display: table-cell; font-family: monospace; font-size: 13px; }",
+    ".as-console-row-code { width: 100%; white-space: pre-wrap; padding: 3px 5px; display: table-cell; font-family: monospace; font-size: 13px; vertical-align: middle; }",
     ".as-console-error:before { content: 'Error: '; color: #f00; }",
     ".as-console-info:before { content: 'Info: '; color: #00f; }",
     ".as-console-warning:before { content: 'Warning: '; color: #e90 }",
@@ -32,7 +32,7 @@
     "@-moz-keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
     "@-ms-keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
     "@keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
-    ".as-console-row code, .as-console-row:before, .as-console-row:after { -webkit-animation: flash 1s; -moz-animation: flash 1s; -ms-animation: flash 1s; animation: flash 1s; }"].join("\n");
+    ".as-console-row-code, .as-console-row:after { -webkit-animation: flash 1s; -moz-animation: flash 1s; -ms-animation: flash 1s; animation: flash 1s; }"].join("\n");
 
 	document.head.appendChild(style);
 
