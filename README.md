@@ -7,5 +7,5 @@ Notes:
 - An `HTMLElement` will be printed as its `outerHTML`
 - Objects are printed using `JSON.stringify()` with an `Object.prototype.toString()` failover
 - Works by injecting elements into the page... so, it obviously pollutes the DOM.
-- The number of entries is now limited to 50 by default. You can modify this limit by calling `console.config({maxEntries:25})`.
+- The number of entries is now limited to 50 by default. You can modify this limit by calling `console.config({maxEntries:25})`. Older entries will be removed to make room for newer entries.
 - Now logs unhandled errors.
