@@ -235,6 +235,8 @@
 			lineno: e.lineno,
 			colno: e.colno
 		}).children[0].classList.add("as-console-error");
+
+		showConsole(1);
 	});
 
 })();
