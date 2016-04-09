@@ -104,8 +104,14 @@
                 length,
                 mind = gap,
                 partial,
-                value = holder[key],
+                value,
                 anchor;
+            
+	        try {
+	            value = holder[key];
+	        } catch (err) {
+	            return "/* error accessing property */";
+	        }
 
 	        if (value && typeof value === 'object' && typeof value.toJSON === 'function') {
 	            value = value.toJSON(key);
