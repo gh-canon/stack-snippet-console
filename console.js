@@ -36,35 +36,174 @@
 
 	document.head.appendChild(style);
 
-	function getString(val, wrapString) {
-		if (typeof val === "string") {
-			return wrapString ? '"' + val + '"' : val;
-		} else if (val == null || typeof val === "number" || typeof val === "function") {
-			return "" + val;
-		} else if (val instanceof Date) {
-			return val.toJSON();
-		} else if (val instanceof HTMLElement) {
-			return val.outerHTML;
-		} else {
-			try {
-				return JSON.stringify(val, function (k, v) {
-					if (v instanceof HTMLElement) {
-						return v.outerHTML;
-					} else if (typeof v === "function") {
-						return "" + v;
-					} else if (typeof v == "string") {
-						var a = /^\/Date\((-?\d*)(\-\d+)?\)\/$/.exec(v);
-						if (a) {
-							return new Date(+a[1]).toJSON();
-						}
-					}
-					return v;
-				}, "  ");
-			} catch (err) {
-				return Object.prototype.toString.call(val);
-			}
-		}
-	}
+	var getString = (function () {
+
+	    var rx_one = /^[\],:{}\s]*$/,
+            rx_two = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
+            rx_three = /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
+            rx_four = /(?:^|:|,)(?:\s*\[)+/g,
+            rx_escapable = /[\\\"\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
+            rx_dangerous = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g;
+
+	    function f(n) {
+	        return n < 10
+                ? '0' + n
+                : n;
+	    }
+
+	    function this_value() {
+	        return this.valueOf();
+	    }
+
+	    var gap,
+            indent,
+            meta = {
+                '\b': '\\b',
+                '\t': '\\t',
+                '\n': '\\n',
+                '\f': '\\f',
+                '\r': '\\r',
+                '"': '\\"',
+                '\\': '\\\\'
+            },
+            map,
+            id;
+
+	    function quote(string) {
+	        rx_escapable.lastIndex = 0;
+	        return rx_escapable.test(string)
+                ? '"' + string.replace(rx_escapable, function (a) {
+                    var c = meta[a];
+                    return typeof c === 'string'
+                        ? c
+                        : '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
+                }) + '"'
+                : '"' + string + '"';
+	    }
+
+	    function getProps(obj) {
+	        var props = [];
+
+	        do {
+	            for (var prop in obj) {
+	                if (!props.includes(prop)) {
+	                    props.push(prop);
+	                }
+	            }
+	        }
+	        while (obj = obj.__proto__);
+
+	        return props;
+	    }
+
+	    function str(key, holder) {
+
+	        var i,
+                k,
+                v,
+                length,
+                mind = gap,
+                partial,
+                value = holder[key],
+                anchor;
+
+	        if (value && typeof value === 'object' && typeof value.toJSON === 'function') {
+	            value = value.toJSON(key);
+	        }
+
+	        if (value instanceof HTMLElement) {
+	            return value.outerHTML;
+	        }
+
+	        if (value instanceof RegExp) {
+	            return String(value);
+	        }
+
+	        if (value instanceof MimeType || value instanceof Plugin) {
+	            return Object.prototype.toString.call(value);
+	        }
+
+	        switch (typeof value) {
+	            case 'string':
+
+	                return quote(value);
+
+	            case 'boolean':
+	            case 'function':
+	            case 'null':
+	            case 'number':
+	            case 'undefined':
+
+	                return String(value);
+
+	            case 'object':
+
+	                if (!value) {
+	                    return 'null';
+	                }
+
+	                var _id = map.get(value);
+
+	                if (_id) {
+	                    return "/*ref:" + _id.toString(16) + "*/";
+	                } else {
+	                    _id = ++id;
+	                    anchor = "/*id:" + _id.toString(16) + "*/";
+	                    map.set(value, _id);
+	                }
+
+	                gap += indent;
+	                partial = [];
+
+	                if (Object.prototype.toString.apply(value) === '[object Array]') {
+
+	                    length = value.length;
+	                    for (i = 0; i < length; i += 1) {
+	                        partial[i] = str(i, value) || 'null';
+	                    }
+
+	                    v = partial.length === 0
+                            ? '[]'
+                            : '[\n' + gap + anchor + "\n" + gap + partial.join(',\n' + gap) + '\n' + mind + ']';
+	                    gap = mind;
+	                    return v;
+	                }
+
+	                getProps(value).forEach(function (k) {
+	                    v = str(k, value);
+	                    if (v) {
+	                        partial.push(quote(k) + ': ' + v);
+	                    }
+	                });
+
+	                v = partial.length === 0
+                        ? '{}'
+                        : '{\n' + gap + anchor + "\n" + gap + partial.join(',\n' + gap) + '\n' + mind + '}';
+	                gap = mind;
+
+	                return v;
+	        }
+	    }
+
+	    return function (value) {
+	        gap = '';
+	        indent = '  ';
+	        map = new WeakMap();
+	        id = 0;
+	        var returnVal = str('', { '': value });
+
+	        while (id) {
+	            if (!new RegExp("/\\*ref:" + id.toString(16) + "\\*/").test(returnVal)) {
+	                returnVal = returnVal.replace(new RegExp("[\r\n\t ]*/\\*id:" + id.toString(16) + "\\*/", "g"), "");
+	            }
+	            id--;
+	        }
+
+	        map = null;
+
+	        return returnVal;
+	    };
+	})();
 
 	function formatDate(d) {
 		d = new Date(d.valueOf() - d.getTimezoneOffset() * 60000);
@@ -95,7 +234,7 @@
 				case "f":
 					return typeof val === "number" ? val : "NaN";
 				default:
-					return getString(val, true);
+					return getString(val);
 			}
 		});
 	}
