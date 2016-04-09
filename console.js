@@ -106,88 +106,89 @@
                 partial,
                 value,
                 anchor;
-            
+
 	        try {
 	            value = holder[key];
-	        } catch (err) {
-	            return "/* error accessing property */";
-	        }
 
-	        if (value && typeof value === 'object' && typeof value.toJSON === 'function') {
-	            value = value.toJSON(key);
-	        }
+	            if (value && typeof value === 'object' && typeof value.toJSON === 'function') {
+	                value = value.toJSON(key);
+	            }
 
-	        if (value instanceof HTMLElement) {
-	            return value.outerHTML;
-	        }
+	            if (value instanceof HTMLElement) {
+	                return value.outerHTML;
+	            }
 
-	        if (value instanceof RegExp) {
-	            return String(value);
-	        }
-
-	        if (value instanceof MimeType || value instanceof Plugin) {
-	            return Object.prototype.toString.call(value);
-	        }
-
-	        switch (typeof value) {
-	            case 'string':
-
-	                return quote(value);
-
-	            case 'boolean':
-	            case 'function':
-	            case 'null':
-	            case 'number':
-	            case 'undefined':
-
+	            if (value instanceof RegExp) {
 	                return String(value);
+	            }
 
-	            case 'object':
+	            if (value instanceof MimeType || value instanceof Plugin) {
+	                return Object.prototype.toString.call(value);
+	            }
 
-	                if (!value) {
-	                    return 'null';
-	                }
+	            switch (typeof value) {
+	                case 'string':
 
-	                var _id = map.get(value);
+	                    return quote(value);
 
-	                if (_id) {
-	                    return "/*ref:" + _id.toString(16) + "*/";
-	                } else {
-	                    _id = ++id;
-	                    anchor = "/*id:" + _id.toString(16) + "*/";
-	                    map.set(value, _id);
-	                }
+	                case 'boolean':
+	                case 'function':
+	                case 'null':
+	                case 'number':
+	                case 'undefined':
 
-	                gap += indent;
-	                partial = [];
+	                    return String(value);
 
-	                if (Object.prototype.toString.apply(value) === '[object Array]') {
+	                case 'object':
 
-	                    length = value.length;
-	                    for (i = 0; i < length; i += 1) {
-	                        partial[i] = str(i, value) || 'null';
+	                    if (!value) {
+	                        return 'null';
 	                    }
+
+	                    var _id = map.get(value);
+
+	                    if (_id) {
+	                        return "/**ref:" + _id.toString(16) + "**/";
+	                    } else {
+	                        _id = ++id;
+	                        anchor = "/**id:" + _id.toString(16) + "**/";
+	                        map.set(value, _id);
+	                    }
+
+	                    gap += indent;
+	                    partial = [];
+
+	                    if (Object.prototype.toString.apply(value) === '[object Array]') {
+
+	                        length = value.length;
+	                        for (i = 0; i < length; i += 1) {
+	                            partial[i] = str(i, value) || 'null';
+	                        }
+
+	                        v = partial.length === 0
+                                ? '[]'
+                                : '[\n' + gap + anchor + "\n" + gap + partial.join(',\n' + gap) + '\n' + mind + ']';
+	                        gap = mind;
+	                        return v;
+	                    }
+
+	                    getProps(value).forEach(function (k) {
+	                        v = str(k, value);
+	                        if (v) {
+	                            partial.push(quote(k) + ': ' + v);
+	                        }
+	                    });
 
 	                    v = partial.length === 0
-                            ? '[]'
-                            : '[\n' + gap + anchor + "\n" + gap + partial.join(',\n' + gap) + '\n' + mind + ']';
+                            ? '{}'
+                            : '{\n' + gap + anchor + "\n" + gap + partial.join(',\n' + gap) + '\n' + mind + '}';
 	                    gap = mind;
+
 	                    return v;
-	                }
+	            }
 
-	                getProps(value).forEach(function (k) {
-	                    v = str(k, value);
-	                    if (v) {
-	                        partial.push(quote(k) + ': ' + v);
-	                    }
-	                });
-
-	                v = partial.length === 0
-                        ? '{}'
-                        : '{\n' + gap + anchor + "\n" + gap + partial.join(',\n' + gap) + '\n' + mind + '}';
-	                gap = mind;
-
-	                return v;
+	        } catch (err) {
+	            return "/**error accessing property**/";
 	        }
 	    }
 
@@ -199,8 +200,8 @@
 	        var returnVal = str('', { '': value });
 
 	        while (id) {
-	            if (!new RegExp("/\\*ref:" + id.toString(16) + "\\*/").test(returnVal)) {
-	                returnVal = returnVal.replace(new RegExp("[\r\n\t ]*/\\*id:" + id.toString(16) + "\\*/", "g"), "");
+	            if (!new RegExp("/\\*\\*ref:" + id.toString(16) + "\\*\\*/").test(returnVal)) {
+	                returnVal = returnVal.replace(new RegExp("[\r\n\t ]*/\\*\\*id:" + id.toString(16) + "\\*\\*/", "g"), "");
 	            }
 	            id--;
 	        }
