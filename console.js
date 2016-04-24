@@ -122,7 +122,7 @@
             if (anyElements || element.textContent.length > 79) {
                 str += "\u2026";
             } else {
-                str += element.textContent.length;
+                str += element.textContent;
             }
 
             str += "</" + tagName + ">";
