@@ -36,7 +36,7 @@
 
     document.head.appendChild(style);
 
-    var getString = (function () {
+    var stringifier = (function () {
 
         var rx_one = /^[\],:{}\s]*$/,
             rx_two = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
@@ -222,17 +222,20 @@
                 }
 
             } catch (err) {
-                alert(err);
                 _error.call(console, err);
                 return "/**error accessing property**/";
             }
         }
 
-        return function (value) {
+        function getString (value) {
+
+            if (typeof value === "string") return value;
+
             gap = '';
             indent = '  ';
             map = new WeakMap();
             id = 0;
+
             var returnVal = str('', { '': value });
 
             while (id) {
@@ -246,6 +249,12 @@
 
             return returnVal;
         };
+
+        return {
+            quote: quote,
+            getString: getString
+        };
+
     })();
 
     function formatDate(d) {
@@ -277,7 +286,11 @@
                 case "f":
                     return typeof val === "number" ? val : "NaN";
                 default:
-                    return getString(val);
+                    if (typeof val === "string") {
+                        return stringifier.quote(val);
+                    } else {
+                        return stringifier.getString(val);
+                    }
             }
         });
     }
@@ -303,7 +316,7 @@
         if (typeof args[0] === "string" && args.length > 1 && /((^|[^%])%[sdifoO])/.test(args[0])) {
             code.textContent = format.apply(null, args);
         } else {
-            code.textContent = [].map.call(args, getString).join(" ");
+            code.textContent = [].map.call(args, stringifier.getString).join(" ");
         }
 
         div.appendChild(row);
