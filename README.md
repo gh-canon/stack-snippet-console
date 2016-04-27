@@ -1,5 +1,7 @@
 # stack-snippet-console
-A simple console visualizer for the DOM. Intercepts console logging calls and routes the output to both the DOM and the console. This was developed to create an output console in the results pane of Stack-Snippets on the StackExchange network... but it should be generally applicable to other apps.
+A simple console visualizer for the DOM. Intercepts console logging calls and routes the output to both the DOM and the console.
+
+This was developed for use in Stack-Snippets on the StackExchange network; though, it should be widely applicable.
 
 Notes:
 - All calls to `console.log()` (`info()`, `warn()`, `error()`, and `clear()`)  are passed along to the actual console
