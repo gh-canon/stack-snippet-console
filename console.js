@@ -1,4 +1,6 @@
-(function () {
+// MIT License, see: https://github.com/gh-canon/stack-snippet-console/blob/master/LICENSE
+
+(function () {    
 
     if (!console) window.console = {};
 
@@ -37,6 +39,9 @@
     document.head.appendChild(style);
 
     var stringifier = (function () {
+
+        // Largely borrowed from Douglas Crockford's json2.js https://github.com/douglascrockford/JSON-js/blob/master/json2.js
+        // Modified because we're more concerned with visualization than data interchange
 
         var rx_one = /^[\],:{}\s]*$/,
             rx_two = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
@@ -102,10 +107,6 @@
 
             var str = "<" + tagName;
 
-            var anyElements = Array.prototype.some.call(element.childNodes, function (n) {
-                return n.nodeType === 1;
-            });
-
             if (element.attributes.length > 0) {
                 str += " ";
             }
@@ -114,13 +115,13 @@
                 if (a.value === "") {
                     return a.name;
                 }
-                return a.name + '="' + a.value + '"';
+                return a.name + '=' + quote(a.value);
             }).join(" ");
 
             str += ">";
 
-            if (anyElements || element.textContent.length > 79) {
-                str += "\u2026";
+            if (element.children.length || element.textContent.length > 79) {
+                str += "\u2026"; // ellipsis
             } else {
                 str += element.textContent;
             }
@@ -157,6 +158,8 @@
                 }
 
                 if (value instanceof MimeType || value instanceof Plugin) {
+                    // Chrome issue(?): As these objects are nested, completely new versions of the same object are (seemingly) generated.
+                    // So, our reference tracking won't track them properly.
                     return Object.prototype.toString.call(value);
                 }
 
@@ -179,14 +182,14 @@
                             return 'null';
                         }
 
-                        var _id = map.get(value);
+                        var _id = map.indexOf(value) + 1;
 
-                        if (_id) {
+                        if (_id > 0) {
                             return "/**ref:" + _id.toString(16) + "**/";
-                        } else {
-                            _id = ++id;
-                            anchor = "/**id:" + _id.toString(16) + "**/";
-                            map.set(value, _id);
+                        } else {                            
+                            map.push(value);
+                            _id = map.length;
+                            anchor = "/**id:" + _id.toString(16) + "**/";                                                        
                         }
 
                         gap += indent;
@@ -233,16 +236,17 @@
 
             gap = '';
             indent = '  ';
-            map = new WeakMap();
-            id = 0;
+            map = [];
 
             var returnVal = str('', { '': value });
 
-            while (id) {
-                if (!new RegExp("/\\*\\*ref:" + id.toString(16) + "\\*\\*/").test(returnVal)) {
-                    returnVal = returnVal.replace(new RegExp("[\r\n\t ]*/\\*\\*id:" + id.toString(16) + "\\*\\*/", "g"), "");
+            var n = map.length;
+
+            while (n) {
+                if (!new RegExp("/\\*\\*ref:" + n.toString(16) + "\\*\\*/").test(returnVal)) {
+                    returnVal = returnVal.replace(new RegExp("[\r\n\t ]*/\\*\\*id:" + n.toString(16) + "\\*\\*/", "g"), "");
                 }
-                id--;
+                n--;
             }
 
             map = null;
