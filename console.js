@@ -477,11 +477,9 @@
 
         if (!arguments.length) label = "default";        
 
-        var prev = timeKeeper[label];
+        if (!(label in timeKeeper)) return;
 
-        if (!prev) return;
-
-        var diff = now - prev;
+        var diff = now - timeKeeper[label];
 
         delete timeKeeper[label];        
 
