@@ -137,7 +137,7 @@
             return str;
         }
 
-        function str(key, holder, forceExpansion) {
+        function str(key, holder) {
 
             var i,
                 k,
@@ -155,7 +155,7 @@
                     value = value.toJSON(key);
                 }
 
-                if (value instanceof HTMLElement && !forceExpansion) {
+                if (value instanceof HTMLElement) {
                     return strElement(value);
                 }
 
@@ -240,7 +240,7 @@
             }
         }
 
-        function getString (value, forceExpansion) {
+        function getString (value) {
 
             if (typeof value === "string") return value;
 
@@ -248,7 +248,7 @@
             indent = '  ';
             map = [];
 
-            var returnVal = str('', { '': value }, forceExpansion);
+            var returnVal = str('', { '': value });
 
             var n = map.length;
 
@@ -292,9 +292,7 @@
                 return "" + val;
             }
 
-            var t = c.charAt(1);
-
-            switch (t) {
+            switch (c.charAt(1)) {
                 case "s":
                     return val;
                 case "d":
@@ -306,7 +304,7 @@
                     if (typeof val === "string") {
                         return stringifier.quote(val);
                     } else {
-                        return stringifier.getString(val, t === "O");
+                        return stringifier.getString(val);
                     }
             }
         });
@@ -444,7 +442,7 @@
 
         if (!args.length) return;
 
-        createLogEntry("%O", args[0]);
+        createLogEntry(args[0]);
 
         showConsole(1);
     };
