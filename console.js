@@ -4,11 +4,16 @@
 
     if (!console) window.console = {};
 
+    var _assert = console.assert;
+    var _dir = console.dir;
     var _log = console.log;
     var _info = console.info;
     var _error = console.error;
     var _warn = console.warn;
     var _clear = console.clear;
+    var _time = console.time;
+    var _timeEnd = console.timeEnd;
+    var timeKeeper = {};
     var wrapper = document.createElement("div");
     var div = document.createElement("div");
     var style = document.createElement("style");
@@ -28,6 +33,7 @@
     ".as-console-row + .as-console-row > * { border: 1px solid #ccc; }",
     ".as-console-row-code { width: 100%; white-space: pre-wrap; padding: 3px 5px; display: table-cell; font-family: monospace; font-size: 13px; vertical-align: middle; }",
     ".as-console-error:before { content: 'Error: '; color: #f00; }",
+    ".as-console-assert:before { content: 'Assertion failed: '; color: #f00; }",
     ".as-console-info:before { content: 'Info: '; color: #00f; }",
     ".as-console-warning:before { content: 'Warning: '; color: #e90 }",
     "@-webkit-keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
@@ -131,7 +137,7 @@
             return str;
         }
 
-        function str(key, holder) {
+        function str(key, holder, forceExpansion) {
 
             var i,
                 k,
@@ -149,7 +155,7 @@
                     value = value.toJSON(key);
                 }
 
-                if (value instanceof HTMLElement) {
+                if (value instanceof HTMLElement && !forceExpansion) {
                     return strElement(value);
                 }
 
@@ -168,14 +174,14 @@
 
                         return quote(value);
 
-                    case 'boolean':
-                    case 'function':
+                    case 'boolean':                    
                     case 'null':
                     case 'number':
                     case 'undefined':
 
                         return String(value);
 
+                    case 'function':
                     case 'object':
 
                         if (!value) {
@@ -190,6 +196,10 @@
                             map.push(value);
                             _id = map.length;
                             anchor = "/**id:" + _id.toString(16) + "**/";                                                        
+                        }
+
+                        if (typeof value === "function") {
+                            return anchor + " " + String(value);
                         }
 
                         gap += indent;
@@ -230,7 +240,7 @@
             }
         }
 
-        function getString (value) {
+        function getString (value, forceExpansion) {
 
             if (typeof value === "string") return value;
 
@@ -238,7 +248,7 @@
             indent = '  ';
             map = [];
 
-            var returnVal = str('', { '': value });
+            var returnVal = str('', { '': value }, forceExpansion);
 
             var n = map.length;
 
@@ -263,7 +273,8 @@
 
     function formatDate(d) {
         d = new Date(d.valueOf() - d.getTimezoneOffset() * 60000);
-        return d.toISOString().replace("Z", "").replace("T", " ");
+        var result = d.toISOString().replace("Z", "");
+        return result.substring(result.indexOf("T") + 1);
     }
 
     function format() {
@@ -271,7 +282,7 @@
             val,
             args = arguments;
 
-        return args[0].replace(/(%?%[sdifoO])/g, function (c) {
+        return args[0].replace(/(%?%[sdifoO])/g, function (c) {            
 
             if (c.length === 3) return c;
 
@@ -281,7 +292,9 @@
                 return "" + val;
             }
 
-            switch (c.charAt(1)) {
+            var t = c.charAt(1);
+
+            switch (t) {
                 case "s":
                     return val;
                 case "d":
@@ -293,7 +306,7 @@
                     if (typeof val === "string") {
                         return stringifier.quote(val);
                     } else {
-                        return stringifier.getString(val);
+                        return stringifier.getString(val, t === "O");
                     }
             }
         });
@@ -342,6 +355,8 @@
 
         _log && _log.apply(console, args);
 
+        if (!args.length) return;
+
         createLogEntry.apply(null, args);
 
         showConsole(1);
@@ -353,6 +368,8 @@
         var args = arguments;
 
         _warn && _warn.apply(console, args);
+
+        if (!args.length) return;
 
         createLogEntry.apply(null, args)
             .children[0].classList.add("as-console-warning");
@@ -367,6 +384,8 @@
 
         _info && _info.apply(console, args);
 
+        if (!args.length) return;
+
         createLogEntry.apply(null, args)
             .children[0].classList.add("as-console-info");
 
@@ -379,6 +398,8 @@
         var args = arguments;
 
         _error && _error.apply(console, args);
+
+        if (!args.length) return;
 
         var entry;
         var e = args[0];
@@ -400,6 +421,34 @@
 
     };
 
+    console.assert = function () {
+
+        var args = arguments;
+
+        _assert && _assert.apply(console, args);
+
+        if (!args[0]) {
+            var entry = createLogEntry.apply(null, Array.prototype.slice.call(args, 1));
+
+            entry.children[0].classList.add("as-console-assert");
+
+            showConsole(1);
+        }
+    };
+
+    console.dir = function () {
+
+        var args = arguments;
+
+        _dir && _dir.apply(console, args);
+
+        if (!args.length) return;
+
+        createLogEntry("%O", args[0]);
+
+        showConsole(1);
+    };
+
     console.clear = function () {
 
         while (div.lastChild) {
@@ -409,6 +458,34 @@
         _clear && _clear.apply(console, arguments);
 
         showConsole(0);
+    };
+
+    console.time = function (label) {
+
+        var now = performance.now();
+
+        _time && _time.apply(console, arguments)              
+        
+        if (!arguments.length) label = "default";
+
+        timeKeeper[label] = now;
+    };
+
+    console.timeEnd = function (label) {
+
+        var now = performance.now();
+
+        _timeEnd && _timeEnd.apply(console, arguments)
+
+        if (!arguments.length) label = "default";        
+
+        var diff = now - timeKeeper[label];
+
+        delete timeKeeper[label];        
+
+        createLogEntry("%s: %sms", label, diff.toFixed(3));
+
+        showConsole(1);
 
     };
 
@@ -425,7 +502,7 @@
         console.log({
             maxEntries: maxEntries
         });
-    }
+    };
 
     window.addEventListener("error", function (e) {
         createLogEntry({
