@@ -4,6 +4,7 @@
 
     if (!console) window.console = {};
 
+    /* original function references */
     var _assert = console.assert;
     var _dir = console.dir;
     var _log = console.log;
@@ -12,12 +13,21 @@
     var _warn = console.warn;
     var _clear = console.clear;
     var _time = console.time;
-    var _timeEnd = console.timeEnd;
+    var _timeEnd = console.timeEnd;    
+    var _count = console.count;
+    var _dirxml = console.dirxml;
+
     var timeKeeper = {};
+    var countKeeper = {};
+
     var wrapper = document.createElement("div");
     var div = document.createElement("div");
     var style = document.createElement("style");
+
+    /* settings */
     var maxEntries = 50;
+    var maximized = false;
+    var autoScroll = true;
 
     wrapper.className = "as-console-wrapper";
     div.className = "as-console";
@@ -26,8 +36,9 @@
 
     style.type = "text/css";
     style.textContent = [
-    ".as-console-wrapper { position: fixed; bottom: 0; left: 0; right: 0; max-height: 150px; overflow-y: scroll; overflow-x: hidden; border-top: 1px solid #000; display: none; }",
-    ".as-console { background: #e9e9e9; border: 1px solid #ccc; display: table; width: 100%; border-collapse: collapse; }",
+    ".as-console-wrapper { position: fixed; bottom: 0; left: 0; right: 0; max-height: 150px; overflow-y: scroll; overflow-x: hidden; border-top: 1px solid #000; display: none; background: #e9e9e9; }",
+    ".as-console-wrapper.maximized { top: 0px; max-height: inherit; display:block; background: #e9e9e9; border-top: none;  }",
+    ".as-console { border: 1px solid #ccc; display: table; width: 100%; border-collapse: collapse; }",
     ".as-console-row { display: table-row; font-family: monospace; font-size: 13px; }",
     ".as-console-row:after { display: table-cell; padding: 3px 6px; color: rgba(0,0,0,.35); border: 1px solid #ccc; content: attr(data-date); vertical-align: top; }",
     ".as-console-row + .as-console-row > * { border: 1px solid #ccc; }",
@@ -311,7 +322,7 @@
     }
 
     function truncateEntries() {
-        while (div.childNodes.length > maxEntries) {
+        while (maxEntries > 0 && div.childNodes.length > maxEntries) {
             div.removeChild(div.firstChild);
         }
     }
@@ -338,12 +349,13 @@
 
         truncateEntries();
 
-        wrapper.scrollTop = row.offsetTop;
+        if (autoScroll) wrapper.scrollTop = row.offsetTop;
 
         return row;
     }
 
     function showConsole(show) {
+        if (maximized) return;
         wrapper.style.display = show ? "block" : "none";
     }
 
@@ -447,6 +459,31 @@
         showConsole(1);
     };
 
+    console.dirxml = function () {
+
+        var args = arguments;
+
+        _dirxml && _dirxml.apply(console, args);
+
+        if (!args.length) return;
+
+        var output = args[0];     
+
+        try
+        {
+            var serializer = new XMLSerializer();
+            output = serializer.serializeToString(output);
+        }
+        catch(err)
+        {
+            output = stringifier.getString(output);
+        };
+
+        createLogEntry("%s", output);
+
+        showConsole(1);
+    };
+
     console.clear = function () {
 
         while (div.lastChild) {
@@ -489,19 +526,41 @@
 
     };
 
-    console.config = function (settings) {
+    console.count = function (label) {
 
-        if (typeof settings === "object") {
+        _count && _count.apply(console, arguments)
 
-            if (settings.maxEntries > 0) {
-                maxEntries = settings.maxEntries;
-                truncateEntries();
-            }
+        if (!arguments.length) label = "";
+
+        var count = 1;
+
+        if (label in countKeeper) {
+            count = ++countKeeper[label];
+        } else {
+            countKeeper[label] = count;
         }
 
-        console.log({
-            maxEntries: maxEntries
-        });
+        console.log("%s: %i", label, count);
+    };
+
+    console.config = function (settings) {
+        if (!settings && typeof settings !== "object") return;
+
+        if (settings.maxEntries > 0 || settings.maxEntries === -1) {
+            maxEntries = settings.maxEntries;
+            truncateEntries();
+        }
+
+        if (settings.maximize) {
+            wrapper.classList.add("maximized");
+            maximized = true;
+        } else {
+            wrapper.classList.remove("maximized");
+            maximized = false;
+            showConsole(div.children.length);
+        }
+
+        autoScroll = settings.autoScroll !== false;
     };
 
     window.addEventListener("error", function (e) {
