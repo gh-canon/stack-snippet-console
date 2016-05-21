@@ -540,7 +540,9 @@
             countKeeper[label] = count;
         }
 
-        console.log("%s: %i", label, count);
+        createLogEntry("%s: %i", label, count);
+
+        showConsole(1);
     };
 
     console.config = function (settings) {
