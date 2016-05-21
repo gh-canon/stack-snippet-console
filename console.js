@@ -322,7 +322,8 @@
     }
 
     function truncateEntries() {
-        while (maxEntries > 0 && div.childNodes.length > maxEntries) {
+        if (maxEntries < 0) return;
+        while (div.childNodes.length > maxEntries) {
             div.removeChild(div.firstChild);
         }
     }
@@ -548,21 +549,28 @@
     console.config = function (settings) {
         if (!settings && typeof settings !== "object") return;
 
-        if (settings.maxEntries > 0 || settings.maxEntries === -1) {
-            maxEntries = settings.maxEntries;
-            truncateEntries();
+        if ("maxEntries" in settings && settings.maxEntries) {
+            var _maxEntries = Number(settings.maxEntries);
+            if (!isNaN(maxEntries)) {
+                maxEntries = _maxEntries;
+                truncateEntries();
+            }
         }
 
-        if (settings.maximize) {
-            wrapper.classList.add("maximized");
-            maximized = true;
-        } else {
-            wrapper.classList.remove("maximized");
-            maximized = false;
-            showConsole(div.children.length);
+        if ("maximize" in settings) {
+            if (settings.maximize) {
+                wrapper.classList.add("maximized");
+                maximized = true;
+            } else {
+                wrapper.classList.remove("maximized");
+                maximized = false;
+                showConsole(div.children.length);
+            }
         }
 
-        autoScroll = settings.autoScroll !== false;
+        if ("autoScroll" in settings) {
+            autoScroll = settings.autoScroll == true;
+        }        
     };
 
     window.addEventListener("error", function (e) {
