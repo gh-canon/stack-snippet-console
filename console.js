@@ -29,7 +29,7 @@
     var maximized = false;
     var autoScroll = true;
 
-    wrapper.className = "as-console-wrapper";
+    wrapper.className = "as-console-wrapper as-console-timestamps";
     div.className = "as-console";
 
     document.body.appendChild(wrapper).appendChild(div);
@@ -37,10 +37,10 @@
     style.type = "text/css";
     style.textContent = [
     ".as-console-wrapper { position: fixed; bottom: 0; left: 0; right: 0; max-height: 150px; overflow-y: scroll; overflow-x: hidden; border-top: 1px solid #000; display: none; background: #e9e9e9; }",
-    ".as-console-wrapper.maximized { top: 0px; max-height: inherit; display:block; background: #e9e9e9; border-top: none;  }",
+    ".as-console-wrapper.as-console-maximized { top: 0px; max-height: inherit; display:block; background: #e9e9e9; border-top: none;  }",
     ".as-console { border: 1px solid #ccc; display: table; width: 100%; border-collapse: collapse; }",
     ".as-console-row { display: table-row; font-family: monospace; font-size: 13px; }",
-    ".as-console-row:after { display: table-cell; padding: 3px 6px; color: rgba(0,0,0,.35); border: 1px solid #ccc; content: attr(data-date); vertical-align: top; }",
+    ".as-console-timestamps .as-console-row:after { display: table-cell; padding: 3px 6px; color: rgba(0,0,0,.35); border: 1px solid #ccc; content: attr(data-date); vertical-align: top; }",
     ".as-console-row + .as-console-row > * { border: 1px solid #ccc; }",
     ".as-console-row-code { width: 100%; white-space: pre-wrap; padding: 3px 5px; display: table-cell; font-family: monospace; font-size: 13px; vertical-align: middle; }",
     ".as-console-error:before { content: 'Error: '; color: #f00; }",
@@ -559,10 +559,10 @@
 
         if ("maximize" in settings) {
             if (settings.maximize) {
-                wrapper.classList.add("maximized");
+                wrapper.classList.add("as-console-maximized");
                 maximized = true;
             } else {
-                wrapper.classList.remove("maximized");
+                wrapper.classList.remove("as-console-maximized");
                 maximized = false;
                 showConsole(div.children.length);
             }
@@ -570,7 +570,15 @@
 
         if ("autoScroll" in settings) {
             autoScroll = settings.autoScroll == true;
-        }        
+        }
+
+        if ("timeStamps" in settings) {
+            if (settings.timeStamps) {
+                wrapper.classList.add("as-console-timestamps");
+            } else {
+                wrapper.classList.remove("as-console-timestamps");
+            }
+        }
     };
 
     window.addEventListener("error", function (e) {
