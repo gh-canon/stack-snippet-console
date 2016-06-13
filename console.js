@@ -105,16 +105,9 @@
 
         function getProps(obj) {
             var props = [];
-
-            do {
-                for (var prop in obj) {
-                    if (props.indexOf(prop) === -1) {
-                        props.push(prop);
-                    }
-                }
+            for (var prop in obj) {
+                props.push(prop);
             }
-            while (obj = obj.__proto__);
-
             return props;
         }
 
