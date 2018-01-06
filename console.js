@@ -1,33 +1,33 @@
-// MIT License, see: https://github.com/gh-canon/stack-snippet-console/blob/master/LICENSE
+﻿// MIT License, see: https://github.com/gh-canon/stack-snippet-console/blob/master/LICENSE
 
-(function () {    
+(() => {
 
     if (!console) window.console = {};
 
     /* original function references */
-    var _assert = console.assert;
-    var _dir = console.dir;
-    var _log = console.log;
-    var _info = console.info;
-    var _error = console.error;
-    var _warn = console.warn;
-    var _clear = console.clear;
-    var _time = console.time;
-    var _timeEnd = console.timeEnd;    
-    var _count = console.count;
-    var _dirxml = console.dirxml;
+    const _assert = console.assert;
+    const _dir = console.dir;
+    const _log = console.log;
+    const _info = console.info;
+    const _error = console.error;
+    const _warn = console.warn;
+    const _clear = console.clear;
+    const _time = console.time;
+    const _timeEnd = console.timeEnd;
+    const _count = console.count;
+    const _dirxml = console.dirxml;
 
-    var timeKeeper = {};
-    var countKeeper = {};
+    const timeKeeper = {};
+    const countKeeper = {};
 
-    var wrapper = document.createElement("div");
-    var div = document.createElement("div");
-    var style = document.createElement("style");
+    const wrapper = document.createElement("div");
+    const div = document.createElement("div");
+    const style = document.createElement("style");
 
     /* settings */
-    var maxEntries = 50;
-    var maximized = false;
-    var autoScroll = true;
+    let maxEntries = 50;
+    let maximized = false;
+    let autoScroll = true;
 
     wrapper.className = "as-console-wrapper as-console-timestamps";
     div.className = "as-console";
@@ -36,289 +36,253 @@
 
     style.type = "text/css";
     style.textContent = [
-    ".as-console-wrapper { position: fixed; bottom: 0; left: 0; right: 0; max-height: 150px; overflow-y: scroll; overflow-x: hidden; border-top: 1px solid #000; display: none; background: #e9e9e9; }",
-    ".as-console-wrapper.as-console-maximized { top: 0px; max-height: inherit; display:block; background: #e9e9e9; border-top: none;  }",
-    ".as-console { border: 1px solid #ccc; display: table; width: 100%; border-collapse: collapse; }",
-    ".as-console-row { display: table-row; font-family: monospace; font-size: 13px; }",
-    ".as-console-timestamps .as-console-row:after { display: table-cell; padding: 3px 6px; color: rgba(0,0,0,.35); border: 1px solid #ccc; content: attr(data-date); vertical-align: top; }",
-    ".as-console-row + .as-console-row > * { border: 1px solid #ccc; }",
-    ".as-console-row-code { width: 100%; white-space: pre-wrap; padding: 3px 5px; display: table-cell; font-family: monospace; font-size: 13px; vertical-align: middle; }",
-    ".as-console-error:before { content: 'Error: '; color: #f00; }",
-    ".as-console-assert:before { content: 'Assertion failed: '; color: #f00; }",
-    ".as-console-info:before { content: 'Info: '; color: #00f; }",
-    ".as-console-warning:before { content: 'Warning: '; color: #e90 }",
-    "@-webkit-keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
-    "@-moz-keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
-    "@-ms-keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
-    "@keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
-    ".as-console-row-code, .as-console-row:after { -webkit-animation: flash 1s; -moz-animation: flash 1s; -ms-animation: flash 1s; animation: flash 1s; }"].join("\n");
+        ".as-console-wrapper { position: fixed; bottom: 0; left: 0; right: 0; max-height: 150px; overflow-y: scroll; overflow-x: hidden; border-top: 1px solid #000; display: none; background: #fff; }",
+        ".as-console-wrapper.as-console-maximized { top: 0px; max-height: inherit; display:block; background: #fff; border-top: none;  }",
+        ".as-console { border: 1px solid #ccc; display: table; width: 100%; border-collapse: collapse; }",
+        ".as-console-row { display: table-row; font-family: monospace; font-size: 10pt; }",
+        ".as-console-timestamps .as-console-row:after { display: table-cell; padding: 3px 6px; color: rgba(0,0,0,.35); border: 1px solid #ccc; content: attr(data-date); vertical-align: top; }",
+        ".as-console-row + .as-console-row > * { border: 1px solid #ccc; }",
+        ".as-console-row-code { width: 100%; white-space: pre-wrap; padding: 3px 5px; display: table-cell; font-family: monospace; font-size: 13px; vertical-align: middle; }",
+        ".as-console-error:before { content: 'Error: '; color: #f00; }",
+        ".as-console-assert:before { content: 'Assertion failed: '; color: #f00; }",
+        ".as-console-info:before { content: 'Info: '; color: #00f; }",
+        ".as-console-warning:before { content: 'Warning: '; color: #e90 }",
+        "@-webkit-keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
+        "@-moz-keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
+        "@-ms-keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
+        "@keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
+        ".as-console-row-code, .as-console-row:after { -webkit-animation: flash 1s; -moz-animation: flash 1s; -ms-animation: flash 1s; animation: flash 1s; }",
+        ".as-console-dictionary { margin: 0; padding: 0 0 0 20px; background-color: #fff; list-style: none; }",
+        ".as-console-dictionary-entry { display: flex; flex-direction: row; }",
+        ".as-console-dictionary-label { color: #C0C; }",
+        ".as-console-dictionary-label::after { content: ': '; }",
+        ".as-console-expandable-value { cursor: default; }",
+        ".as-console-expandable-value::before { content: ''; display: inline-block; margin: 0 4px 0 0; width: 8.316px; height: 7.2px; background-size: 100%; background-repeat: no-repeat; background-position: center center; background-image: url('data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IiB3aWR0aD0iMTMuODU2cHgiIGhlaWdodD0iMTJweCIgdmlld0JveD0iMCAwIDEzLjg1NiAxMiIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgMTMuODU2IDEyIj48cG9seWdvbiBmaWxsPSIjQ0NDQ0NDIiBwb2ludHM9IjEzLjg1NiwwIDYuOTI4LDEyIDAsMCAiLz48L3N2Zz4='); }",
+        ".as-console-collapsed-value::before { transform-origin: center center; transform: rotate(-90deg); margin: 0 4px 1px 0;  }",
+        ".as-console-collapsed-value .as-console-dictionary { display: none; }",
+        ".as-console-ellipsis { display: none; }",
+        ".as-console-collapsed-value .as-console-ellipsis { display: inline; }",
+        ".as-console-type-label, .as-console-nil-value { color: #BBB; }",
+        ".as-console-literal-value, .as-console-string-value { color: #C00; }",
+        ".as-console-string-value::before, .as-console-string-value::after { content: '\"'; color: #000; }",
+        ".as-console-error { color: #F00; }",
+        ".as-console-keyword { color: #00F; }",
+        ".as-console-inherited-value .as-console-dictionary-label, .as-console-non-enumerable-value .as-console-dictionary-label { color: #DAD; }",
+        ".as-console-function-preview { font-style: italic; }"
+    ].join("\n");
 
     document.head.appendChild(style);
 
-    var stringifier = (function () {
+    function formatDate(d) {
+        d = new Date(d.valueOf() - d.getTimezoneOffset() * 60000);
+        let result = d.toISOString().replace("Z", "");
+        return result.substring(result.indexOf("T") + 1);
+    }
 
-        // Largely borrowed from Douglas Crockford's json2.js https://github.com/douglascrockford/JSON-js/blob/master/json2.js
-        // Modified because we're more concerned with visualization than data interchange
-
-        var rx_one = /^[\],:{}\s]*$/,
-            rx_two = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
-            rx_three = /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
-            rx_four = /(?:^|:|,)(?:\s*\[)+/g,
-            rx_escapable = /[\\\"\u0000-\u001f\u007f-\u009f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g,
-            rx_dangerous = /[\u0000\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g;
-
-        function f(n) {
-            return n < 10
-                ? '0' + n
-                : n;
+    function flushMessageBuffer(buffer, messasge) {
+        if (buffer.length) {
+            messasge.appendChild(document.createTextNode(buffer.join("")));
+            buffer.splice(0);
         }
+    }
 
-        function this_value() {
-            return this.valueOf();
-        }
+    let domify = (() => {
 
-        var gap,
-            indent,
-            meta = {
-                '\b': '\\b',
-                '\t': '\\t',
-                '\n': '\\n',
-                '\f': '\\f',
-                '\r': '\\r',
-                '"': '\\"',
-                '\\': '\\\\'
-            },
-            map,
-            id;
-
-        function quote(string) {
-            rx_escapable.lastIndex = 0;
-            return rx_escapable.test(string)
-                ? '"' + string.replace(rx_escapable, function (a) {
-                    var c = meta[a];
-                    return typeof c === 'string'
-                        ? c
-                        : '\\u' + ('0000' + a.charCodeAt(0).toString(16)).slice(-4);
-                }) + '"'
-                : '"' + string + '"';
-        }
+        const domValueMap = new WeakMap();
 
         function getProps(obj) {
-            var props = [];
+            let props = [];
 
             do {
-                for (var prop in obj) {
+                for (let prop of Object.getOwnPropertyNames(obj)) {
                     if (props.indexOf(prop) === -1) {
                         props.push(prop);
                     }
                 }
             }
-            while (obj = obj.__proto__);
+            while (obj = Object.getPrototypeOf(obj));
 
             return props;
         }
 
-        function strElement(element) {
+        function toggleExpansion(e) {
+            if (e.target === this || (e.target.parentNode === this && e.target.tagName !== "UL")) {
 
-            var tagName = element.tagName.toLowerCase();
-
-            var str = "<" + tagName;
-
-            if (element.attributes.length > 0) {
-                str += " ";
-            }
-
-            str += Array.prototype.map.call(element.attributes, function (a) {
-                if (a.value === "") {
-                    return a.name;
+                if (this.classList.contains("as-console-collapsed-value")) {
+                    this.classList.remove("as-console-collapsed-value")
+                    this.classList.add("as-console-expanded-value")
+                } else {
+                    this.classList.remove("as-console-expanded-value")
+                    this.classList.add("as-console-collapsed-value")
                 }
-                return a.name + '=' + quote(a.value);
-            }).join(" ");
-
-            str += ">";
-
-            if (element.children.length || element.textContent.length > 79) {
-                str += "\u2026"; // ellipsis
-            } else {
-                str += element.textContent;
             }
-
-            str += "</" + tagName + ">";
-
-            return str;
         }
 
-        function str(key, holder) {
+        function expandObjectDom() {
 
-            var i,
-                k,
-                v,
-                length,
-                mind = gap,
-                partial,
-                value,
-                anchor;
+            let span,
+                li,
+                value = domValueMap.get(this),
+                ul = document.createElement("ul");
 
-            try {
-                value = holder[key];
+            ul.classList.add("as-console-dictionary");
 
-                if (value && typeof value === 'object' && typeof value.toJSON === 'function') {
-                    value = value.toJSON(key);
+            for (let prop of getProps(value)) {
+                let descriptor = Object.getOwnPropertyDescriptor(value, prop);
+                li = document.createElement("li");
+                li.classList.add("as-console-dictionary-entry");
+                if (!Object.hasOwnProperty.call(value, prop)) {
+                    li.classList.add("as-console-inherited-value");
                 }
-
-                if (value instanceof HTMLElement) {
-                    return strElement(value);
+                if (descriptor && !descriptor.enumerable) {
+                    li.classList.add("as-console-non-enumerable-value");
                 }
-
-                if (value instanceof RegExp) {
-                    return String(value);
+                ul.appendChild(li);
+                span = document.createElement("span");
+                span.classList.add("as-console-dictionary-label");
+                span.textContent = prop;
+                li.appendChild(span);
+                span = document.createElement("span");
+                span.classList.add("as-console-dictionary-value");
+                try {
+                    span.appendChild(domify(value[prop]));
+                } catch (err) {
+                    span.textContent = err.message;
+                    span.classList.add("as-console-error");
                 }
+                li.appendChild(span);
+            }
 
-                if (value instanceof MimeType || value instanceof Plugin) {
-                    // Chrome issue(?): As these objects are nested, completely new versions of the same object are (seemingly) generated.
-                    // So, our reference tracking won't track them properly.
-                    return Object.prototype.toString.call(value);
-                }
+            this.classList.remove("as-console-collapsed-value");
+            this.classList.add("as-console-expanded-value");
+            this.insertBefore(ul, this.lastElementChild);
+            this.removeEventListener("click", expandObjectDom);
+            this.addEventListener("click", toggleExpansion);
+        }
 
+        function getArgs(func) /* source: humbletim @ https://stackoverflow.com/a/31194949/621962 */ {
+            return Function.prototype.toString.call(func)
+                .replace(/[/][/].*$/mg, '') // strip single-line comments
+                .replace(/\s+/g, '') // strip white space
+                .replace(/[/][*][^/*]*[*][/]/g, '') // strip multi-line comments  
+                .split('){', 1)[0].replace(/^[^(]*[(]/, '') // extract the parameters  
+                .replace(/=[^,]+/g, '') // strip any ES6 defaults  
+                .split(',').filter(Boolean); // split & filter [""]
+        }
+
+        return function domify(value, config) {
+
+            config = config || {};
+
+            let span = document.createElement("span");
+
+            span.classList.add("as-console-value");
+
+            if (value == null) {
+                span.textContent = String(value);
+                span.classList.add("as-console-nil-value");
+            } else if (value && typeof value === 'object' && typeof value.toJSON === 'function') {
+                span.textContent = value.toJSON();
+            } else if (value instanceof RegExp) {
+                span.classList.add("as-console-literal-value");
+                span.textContent = String(value);
+            } else {
                 switch (typeof value) {
                     case 'string':
-
-                        return quote(value);
-
-                    case 'boolean':                    
-                    case 'null':
+                        span.textContent = value;
+                        if (!config.noStyle) {
+                            span.classList.add("as-console-string-value");
+                        }
+                        break;
+                    case 'boolean':
                     case 'number':
-                    case 'undefined':
-
-                        return String(value);
-
+                        span.textContent = String(value);
+                        span.classList.add("as-console-keyword");
+                        break;
                     case 'function':
                     case 'object':
-
-                        if (!value) {
-                            return 'null';
-                        }
-
-                        var _id = map.indexOf(value) + 1;
-
-                        if (_id > 0) {
-                            return "/**ref:" + _id.toString(16) + "**/";
-                        } else {                            
-                            map.push(value);
-                            _id = map.length;
-                            anchor = "/**id:" + _id.toString(16) + "**/";                                                        
-                        }
+                        let type = Object.prototype.toString.call(value).slice(8, -1);
+                        let caps = type === "Array" ? "[]" : "{}";
 
                         if (typeof value === "function") {
-                            return anchor + " " + String(value);
+                            let functionSymbol = document.createElement("span");
+                            functionSymbol.textContent = "ƒ "
+                            functionSymbol.classList.add("as-console-keyword");
+                            span.appendChild(functionSymbol);
+                            let functionPreview = document.createElement("span");
+                            functionPreview.classList.add("as-console-function-preview");
+                            functionPreview.textContent = `${value.name}(${getArgs(value).join(", ")})`;
+                            span.appendChild(functionPreview)
+                        } else {
+                            let typeLabel = document.createElement("span");
+                            typeLabel.textContent = type;
+                            typeLabel.classList.add("as-console-type-label");
+                            span.appendChild(typeLabel);
                         }
-
-                        gap += indent;
-                        partial = [];
-
-                        if (Object.prototype.toString.apply(value) === '[object Array]') {
-
-                            length = value.length;
-                            for (i = 0; i < length; i += 1) {
-                                partial[i] = str(i, value) || 'null';
-                            }
-
-                            v = partial.length === 0
-                                ? '[]'
-                                : '[\n' + gap + anchor + "\n" + gap + partial.join(',\n' + gap) + '\n' + mind + ']';
-                            gap = mind;
-                            return v;
-                        }
-
-                        getProps(value).forEach(function (k) {
-                            v = str(k, value);
-                            if (v) {
-                                partial.push(quote(k) + ': ' + v);
-                            }
-                        });
-
-                        v = partial.length === 0
-                            ? '{}'
-                            : '{\n' + gap + anchor + "\n" + gap + partial.join(',\n' + gap) + '\n' + mind + '}';
-                        gap = mind;
-
-                        return v;
+                        span.classList.add("as-console-collapsed-value");
+                        domValueMap.set(span, value);
+                        span.appendChild(document.createTextNode(` ${caps[0]}`));
+                        let ellipsis = document.createElement("span");
+                        ellipsis.textContent = "…";
+                        ellipsis.classList.add("as-console-ellipsis");
+                        span.appendChild(ellipsis);
+                        span.classList.add("as-console-expandable-value");
+                        span.addEventListener("click", expandObjectDom);
+                        span.appendChild(document.createTextNode(caps[1]));
+                        break;
                 }
-
-            } catch (err) {
-                _error.call(console, err);
-                return "/**error accessing property**/";
             }
+
+            return span;
         }
-
-        function getString (value) {
-
-            if (typeof value === "string") return value;
-
-            gap = '';
-            indent = '  ';
-            map = [];
-
-            var returnVal = str('', { '': value });
-
-            var n = map.length;
-
-            while (n) {
-                if (!new RegExp("/\\*\\*ref:" + n.toString(16) + "\\*\\*/").test(returnVal)) {
-                    returnVal = returnVal.replace(new RegExp("[\r\n\t ]*/\\*\\*id:" + n.toString(16) + "\\*\\*/", "g"), "");
-                }
-                n--;
-            }
-
-            map = null;
-
-            return returnVal;
-        };
-
-        return {
-            quote: quote,
-            getString: getString
-        };
-
     })();
 
-    function formatDate(d) {
-        d = new Date(d.valueOf() - d.getTimezoneOffset() * 60000);
-        var result = d.toISOString().replace("Z", "");
-        return result.substring(result.indexOf("T") + 1);
-    }
+    function format(formatString, ...args) {
 
-    function format() {
-        var i = 0,
-            val,
-            args = arguments;
+        let message = document.createDocumentFragment();
 
-        return args[0].replace(/(%?%[sdifoO])/g, function (c) {            
+        let buffer = [];
 
-            if (c.length === 3) return c;
+        let escaped = false;
 
-            val = args[++i];
+        let argumentIndex = 0;
 
-            if (val == null) {
-                return "" + val;
-            }
-
-            switch (c.charAt(1)) {
-                case "s":
-                    return val;
-                case "d":
-                case "i":
-                    return typeof val === "number" ? Math.floor(val) : "NaN";
-                case "f":
-                    return typeof val === "number" ? val : "NaN";
-                default:
-                    if (typeof val === "string") {
-                        return stringifier.quote(val);
-                    } else {
-                        return stringifier.getString(val);
+        Array.prototype.forEach.call(formatString, (char, index) => {
+            if (char === "%" && !escaped) {
+                escaped = true;
+            } else {
+                if (escaped) {
+                    escaped = false;
+                    switch (char) {
+                        case "%":
+                            buffer.push("%");
+                            break;
+                        case "d":
+                        case "i":
+                            flushMessageBuffer(buffer, message);
+                            message.appendChild(domify(Math.floor(args[argumentIndex++])));
+                        case "o":
+                        case "O":
+                            flushMessageBuffer(buffer, message);
+                            message.appendChild(domify(args[argumentIndex++]));
+                            break;
+                        case "s":
+                            flushMessageBuffer(buffer, message);
+                            message.appendChild(domify(args[argumentIndex++], { noStyle: true }));
+                            break;
+                        default:
+                            // ?
+                            break;
                     }
+                } else {
+                    buffer.push(char);
+                }
             }
         });
+
+        flushMessageBuffer(buffer, message);
+
+        return message;
     }
 
     function truncateEntries() {
@@ -328,23 +292,28 @@
         }
     }
 
-    function createLogEntry() {
+    function createLogEntry(...args) {
 
-        var args = arguments;
-
-        var row = document.createElement("div");
+        let row = document.createElement("div");
         row.className = "as-console-row";
 
         row.setAttribute("data-date", formatDate(new Date()));
 
-        var code = row.appendChild(document.createElement("code"));
+        let code = row.appendChild(document.createElement("code"));
         code.className = "as-console-row-code";
 
         if (typeof args[0] === "string" && args.length > 1 && /((^|[^%])%[sdifoO])/.test(args[0])) {
-            code.textContent = format.apply(null, args);
+            code.appendChild(format(...args));
         } else {
-            code.textContent = [].map.call(args, stringifier.getString).join(" ");
+            args.forEach((arg, i) => {
+                if (i > 0) {
+                    code.appendChild(document.createTextNode(", "));
+                }
+                code.appendChild(domify(arg));
+            });
         }
+
+        row.appendChild(code);
 
         div.appendChild(row);
 
@@ -360,29 +329,25 @@
         wrapper.style.display = show ? "block" : "none";
     }
 
-    console.log = function () {
-
-        var args = arguments;
+    console.log = function (...args) {
 
         _log && _log.apply(console, args);
 
         if (!args.length) return;
 
-        createLogEntry.apply(null, args);
+        createLogEntry(...args);
 
         showConsole(1);
 
     };
 
-    console.warn = function () {
-
-        var args = arguments;
+    console.warn = function (...args) {
 
         _warn && _warn.apply(console, args);
 
         if (!args.length) return;
 
-        createLogEntry.apply(null, args)
+        createLogEntry(...args)
             .children[0].classList.add("as-console-warning");
 
         showConsole(1);
@@ -391,29 +356,27 @@
 
     console.info = function () {
 
-        var args = arguments;
+        let args = arguments;
 
         _info && _info.apply(console, args);
 
         if (!args.length) return;
 
-        createLogEntry.apply(null, args)
+        createLogEntry(...args)
             .children[0].classList.add("as-console-info");
 
         showConsole(1);
 
     };
 
-    console.error = function () {
-
-        var args = arguments;
+    console.error = function (...args) {
 
         _error && _error.apply(console, args);
 
         if (!args.length) return;
 
-        var entry;
-        var e = args[0];
+        let entry;
+        let e = args[0];
 
         if (e instanceof Error) {
             entry = createLogEntry({
@@ -423,7 +386,7 @@
                 colno: e.colno
             });
         } else {
-            entry = createLogEntry.apply(null, args)
+            entry = createLogEntry(...args)
         }
 
         entry.children[0].classList.add("as-console-error");
@@ -432,14 +395,12 @@
 
     };
 
-    console.assert = function () {
-
-        var args = arguments;
+    console.assert = function (...args) {
 
         _assert && _assert.apply(console, args);
 
         if (!args[0]) {
-            var entry = createLogEntry.apply(null, Array.prototype.slice.call(args, 1));
+            let entry = createLogEntry(...args.slice(1));
 
             entry.children[0].classList.add("as-console-assert");
 
@@ -447,9 +408,7 @@
         }
     };
 
-    console.dir = function () {
-
-        var args = arguments;
+    console.dir = function (...args) {
 
         _dir && _dir.apply(console, args);
 
@@ -462,23 +421,17 @@
 
     console.dirxml = function () {
 
-        var args = arguments;
+        let args = arguments;
 
         _dirxml && _dirxml.apply(console, args);
 
         if (!args.length) return;
 
-        var output = args[0];     
+        let output = args[0];
 
-        try
-        {
-            var serializer = new XMLSerializer();
-            output = serializer.serializeToString(output);
-        }
-        catch(err)
-        {
-            output = stringifier.getString(output);
-        };
+        let serializer = new XMLSerializer();
+
+        output = serializer.serializeToString(output);
 
         createLogEntry("%s", output);
 
@@ -498,10 +451,10 @@
 
     console.time = function (label) {
 
-        var now = performance.now();
+        const now = performance.now();
 
-        _time && _time.apply(console, arguments)              
-        
+        _time && _time.apply(console, arguments)
+
         if (!arguments.length) label = "default";
 
         timeKeeper[label] = now;
@@ -509,17 +462,17 @@
 
     console.timeEnd = function (label) {
 
-        var now = performance.now();
+        const now = performance.now();
 
         _timeEnd && _timeEnd.apply(console, arguments)
 
-        if (!arguments.length) label = "default";        
+        if (!arguments.length) label = "default";
 
         if (!(label in timeKeeper)) return;
 
-        var diff = now - timeKeeper[label];
+        let diff = now - timeKeeper[label];
 
-        delete timeKeeper[label];        
+        delete timeKeeper[label];
 
         createLogEntry("%s: %sms", label, diff.toFixed(3));
 
@@ -533,7 +486,7 @@
 
         if (!arguments.length) label = "";
 
-        var count = 1;
+        let count = 1;
 
         if (label in countKeeper) {
             count = ++countKeeper[label];
@@ -550,7 +503,7 @@
         if (!settings && typeof settings !== "object") return;
 
         if ("maxEntries" in settings && settings.maxEntries) {
-            var _maxEntries = Number(settings.maxEntries);
+            let _maxEntries = Number(settings.maxEntries);
             if (!isNaN(maxEntries)) {
                 maxEntries = _maxEntries;
                 truncateEntries();
