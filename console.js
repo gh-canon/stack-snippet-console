@@ -65,7 +65,6 @@
         ".as-console-type-label, .as-console-nil-value { color: #BBB; }",
         ".as-console-literal-value, .as-console-string-value { color: #C00; }",
         ".as-console-string-value::before, .as-console-string-value::after { content: '\"'; color: #000; }",
-        ".as-console-error { color: #F00; }",
         ".as-console-keyword { color: #00F; }",
         ".as-console-inherited-value .as-console-dictionary-label, .as-console-non-enumerable-value .as-console-dictionary-label { color: #DAD; }",
         ".as-console-function-preview { font-style: italic; }"
@@ -258,9 +257,10 @@
                             buffer.push("%");
                             break;
                         case "d":
-                        case "i":
+                        case "i":                            
                             flushMessageBuffer(buffer, message);
                             message.appendChild(domify(Math.floor(args[argumentIndex++])));
+                            break;
                         case "o":
                         case "O":
                             flushMessageBuffer(buffer, message);
@@ -269,9 +269,6 @@
                         case "s":
                             flushMessageBuffer(buffer, message);
                             message.appendChild(domify(args[argumentIndex++], { noStyle: true }));
-                            break;
-                        default:
-                            // ?
                             break;
                     }
                 } else {
