@@ -169,7 +169,11 @@
                     failedAccess = true;
                 }
 
-                ul.appendChild(getPropertyEntry(descriptor.name, propertyValue, descriptor.enumerable, failedAccess));
+                try {
+                    ul.appendChild(getPropertyEntry(descriptor.name, propertyValue, descriptor.enumerable, failedAccess));
+                } catch (err) {
+                    // thanks, M$...
+                }
             }
             
             if (typeof value !== "function") {
