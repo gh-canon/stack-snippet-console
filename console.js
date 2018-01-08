@@ -66,7 +66,7 @@
         ".as-console-literal-value, .as-console-string-value { color: #C00; }",
         ".as-console-string-value::before, .as-console-string-value::after { content: '\"'; color: #000; }",
         ".as-console-keyword { color: #00F; }",
-        ".as-console-non-enumerable-value .as-console-dictionary-label { color: #b571be; }",
+        ".as-console-non-enumerable-value > .as-console-dictionary-label { color: #b571be; }",
         ".as-console-function-preview { font-style: italic; }"
     ].join("\n");
 
@@ -124,6 +124,17 @@
             return li;
         }
 
+        function getRootValue(element, name) {
+            if (name === "constructor" || name === "prototype") {
+                return domValueMap.get(element)[name];
+            }
+            do {
+                if (element.classList && element.classList.contains("as-console-expandable-value") && !element.classList.contains("as-console-proto")) {
+                    return domValueMap.get(element)[name];
+                }
+            } while (element = element.parentNode);
+        }
+
         function expandObjectDom() {
 
             let span,
@@ -146,9 +157,9 @@
             let rxNumeric = /^[0-9]+$/;
 
             descriptors.sort((a, b) => {
-                if (a.enumerable && !b.enumerable) {
+                if (a.enumerable > b.enumerable) {
                     return -1;
-                } else if (b.enumerable && !a.enumerable) {
+                } else if (a.enumerable < b.enumerable) {
                     return 1;
                 } else {
                     let aVal = rxNumeric.test(a.name) ? parseInt(a.name, 10) : a.name,
@@ -162,8 +173,8 @@
                 let propertyValue,
                     failedAccess;
 
-                try {
-                    propertyValue = value[descriptor.name];
+                try {               
+                    propertyValue = getRootValue(this, descriptor.name);                    
                 } catch (err) {
                     propertyValue = err.message;
                     failedAccess = true;
@@ -179,7 +190,10 @@
             if (typeof value !== "function") {
                 let proto = Object.getPrototypeOf(value);                
                 if (proto) {
-                    ul.appendChild(getPropertyEntry("__proto__", proto, false));
+                    ul.appendChild(getPropertyEntry("__proto__", proto, false))
+                        .lastElementChild
+                        .firstElementChild
+                        .classList.add("as-console-proto");
                 }
             }
 
