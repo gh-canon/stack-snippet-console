@@ -126,19 +126,21 @@
 
         function getRootValue(element, name) {
 
-            let originalElement = element,
-                value;                                   
+            try {
+                let value = domValueMap.get(element)[name];
+                if (typeof value === "function") {
+                    return value;
+                }
+            } catch (err) {
+                /* Access violation */
+            }
 
-            if (name === "constructor" || name === "prototype") {
+            if (name === "prototype") {
                 return domValueMap.get(element)[name];
             }
             do {
                 if (element.classList && element.classList.contains("as-console-expandable-value") && !element.classList.contains("as-console-proto")) {
-                    value = domValueMap.get(element)[name];
-                    if (typeof value === "function") {
-                        return domValueMap.get(originalElement)[name];
-                    }
-                    return value;
+                    return domValueMap.get(element)[name];                    
                 }
             } while (element = element.parentNode);
         }
