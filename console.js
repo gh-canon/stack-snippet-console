@@ -125,12 +125,20 @@
         }
 
         function getRootValue(element, name) {
+
+            let originalElement = element,
+                value;                                   
+
             if (name === "constructor" || name === "prototype") {
                 return domValueMap.get(element)[name];
             }
             do {
                 if (element.classList && element.classList.contains("as-console-expandable-value") && !element.classList.contains("as-console-proto")) {
-                    return domValueMap.get(element)[name];
+                    value = domValueMap.get(element)[name];
+                    if (typeof value === "function") {
+                        return domValueMap.get(originalElement)[name];
+                    }
+                    return value;
                 }
             } while (element = element.parentNode);
         }
@@ -166,6 +174,7 @@
                 }
             }
 
+            
             let rxNumeric = /^[0-9]+$/;
 
             descriptors.sort((a, b) => {
@@ -174,9 +183,20 @@
                 } else if (a.enumerable < b.enumerable) {
                     return 1;
                 } else {
-                    let aVal = rxNumeric.test(a.name) ? parseInt(a.name, 10) : a.name,
-                        bVal = rxNumeric.test(b.name) ? parseInt(b.name, 10) : b.name;                
-                    return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+                    let aNumeric = rxNumeric.test(a.name),
+                        bNumeric = rxNumeric.test(b.name),
+                        aVal = aNumeric ? parseInt(a.name, 10) : a.name,
+                        bVal = bNumeric ? parseInt(b.name, 10) : b.name,
+                        aIsNaN = isNaN(aVal) || !aNumeric,
+                        bIsNaN = isNaN(bVal) || !bNumeric;
+
+                    if (aIsNaN < bIsNaN) {
+                        return -1;
+                    } else if (aIsNaN > bIsNaN) {
+                        return 1;
+                    } else {
+                        return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+                    }
                 }
             });
 
