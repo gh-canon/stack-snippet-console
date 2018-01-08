@@ -62,11 +62,11 @@
         ".as-console-collapsed-value .as-console-dictionary { display: none; }",
         ".as-console-ellipsis { display: none; }",
         ".as-console-collapsed-value .as-console-ellipsis { display: inline; }",
-        ".as-console-type-label, .as-console-nil-value { color: #BBB; }",
+        ".as-console-type-label, .as-console-nil-value { color: #808080; }",
         ".as-console-literal-value, .as-console-string-value { color: #C00; }",
         ".as-console-string-value::before, .as-console-string-value::after { content: '\"'; color: #000; }",
         ".as-console-keyword { color: #00F; }",
-        ".as-console-inherited-value .as-console-dictionary-label, .as-console-non-enumerable-value .as-console-dictionary-label { color: #DAD; }",
+        ".as-console-non-enumerable-value .as-console-dictionary-label { color: #DAD; }",
         ".as-console-function-preview { font-style: italic; }"
     ].join("\n");
 
@@ -74,8 +74,8 @@
 
     function formatDate(d) {
         d = new Date(d.valueOf() - d.getTimezoneOffset() * 60000);
-        let result = d.toISOString().replace("Z", "");
-        return result.substring(result.indexOf("T") + 1);
+        let result = d.toISOString().replace("Z", "").replace("T", " ");
+        return result;
     }
 
     function flushMessageBuffer(buffer, messasge) {
@@ -88,21 +88,6 @@
     let domify = (() => {
 
         const domValueMap = new WeakMap();
-
-        function getProps(obj) {
-            let props = [];
-
-            do {
-                for (let prop of Object.getOwnPropertyNames(obj)) {
-                    if (props.indexOf(prop) === -1) {
-                        props.push(prop);
-                    }
-                }
-            }
-            while (obj = Object.getPrototypeOf(obj));
-
-            return props;
-        }
 
         function toggleExpansion(e) {
             if (e.target === this || (e.target.parentNode === this && e.target.tagName !== "UL")) {
@@ -117,6 +102,28 @@
             }
         }
 
+        function getPropertyEntry(name, value, enumerable) {
+            let li = document.createElement("li");
+            li.classList.add("as-console-dictionary-entry");
+            if (!enumerable) {
+                li.classList.add("as-console-non-enumerable-value");
+            }
+            let span = document.createElement("span");
+            span.classList.add("as-console-dictionary-label");
+            span.textContent = name;
+            li.appendChild(span);
+            span = document.createElement("span");
+            span.classList.add("as-console-dictionary-value");
+            try {
+                span.appendChild(domify(value));
+            } catch (err) {
+                span.textContent = err.message;
+                span.classList.add("as-console-error");
+            }
+            li.appendChild(span);
+            return li;
+        }
+
         function expandObjectDom() {
 
             let span,
@@ -126,30 +133,39 @@
 
             ul.classList.add("as-console-dictionary");
 
-            for (let prop of getProps(value)) {
-                let descriptor = Object.getOwnPropertyDescriptor(value, prop);
-                li = document.createElement("li");
-                li.classList.add("as-console-dictionary-entry");
-                if (!Object.hasOwnProperty.call(value, prop)) {
-                    li.classList.add("as-console-inherited-value");
+            let descriptors = (descriptors => {
+                let properties = [];
+                for (let name in descriptors) {
+                    let descriptor = descriptors[name];
+                    descriptor.name = name;
+                    properties.push(descriptor);
                 }
-                if (descriptor && !descriptor.enumerable) {
-                    li.classList.add("as-console-non-enumerable-value");
+                return properties;
+            })(Object.getOwnPropertyDescriptors(value));
+
+            let rxNumeric = /^[0-9]+$/;
+
+            descriptors.sort((a, b) => {
+                if (a.enumerable && !b.enumerable) {
+                    return -1;
+                } else if (b.enumerable && !a.enumerable) {
+                    return 1;
+                } else {
+                    let aVal = rxNumeric.test(a.name) ? parseInt(a.name, 10) : a.name,
+                        bVal = rxNumeric.test(b.name) ? parseInt(b.name, 10) : b.name;                
+                    return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
                 }
-                ul.appendChild(li);
-                span = document.createElement("span");
-                span.classList.add("as-console-dictionary-label");
-                span.textContent = prop;
-                li.appendChild(span);
-                span = document.createElement("span");
-                span.classList.add("as-console-dictionary-value");
-                try {
-                    span.appendChild(domify(value[prop]));
-                } catch (err) {
-                    span.textContent = err.message;
-                    span.classList.add("as-console-error");
+            });
+
+            for (let descriptor of descriptors) {
+                ul.appendChild(getPropertyEntry(descriptor.name, value[descriptor.name], descriptor.enumerable));
+            }
+            
+            if (typeof value !== "function") {
+                let proto = Object.getPrototypeOf(value);
+                if (proto) {
+                    ul.appendChild(getPropertyEntry("__proto__", proto, false));
                 }
-                li.appendChild(span);
             }
 
             this.classList.remove("as-console-collapsed-value");
@@ -173,63 +189,65 @@
 
             config = config || {};
 
-            let span = document.createElement("span");
+            let type = Object.prototype.toString.call(value).slice(8, -1),
+                span = document.createElement("span");
 
-            span.classList.add("as-console-value");
+            span.classList.add("as-console-value");            
 
-            if (value == null) {
-                span.textContent = String(value);
-                span.classList.add("as-console-nil-value");
-            } else if (value && typeof value === 'object' && typeof value.toJSON === 'function') {
-                span.textContent = value.toJSON();
-            } else if (value instanceof RegExp) {
-                span.classList.add("as-console-literal-value");
-                span.textContent = String(value);
-            } else {
-                switch (typeof value) {
-                    case 'string':
-                        span.textContent = value;
-                        if (!config.noStyle) {
-                            span.classList.add("as-console-string-value");
-                        }
-                        break;
-                    case 'boolean':
-                    case 'number':
-                        span.textContent = String(value);
-                        span.classList.add("as-console-keyword");
-                        break;
-                    case 'function':
-                    case 'object':
-                        let type = Object.prototype.toString.call(value).slice(8, -1);
-                        let caps = type === "Array" ? "[]" : "{}";
-
-                        if (typeof value === "function") {
-                            let functionSymbol = document.createElement("span");
-                            functionSymbol.textContent = "ƒ "
-                            functionSymbol.classList.add("as-console-keyword");
-                            span.appendChild(functionSymbol);
-                            let functionPreview = document.createElement("span");
-                            functionPreview.classList.add("as-console-function-preview");
-                            functionPreview.textContent = `${value.name}(${getArgs(value).join(", ")})`;
-                            span.appendChild(functionPreview)
-                        } else {
-                            let typeLabel = document.createElement("span");
-                            typeLabel.textContent = type;
-                            typeLabel.classList.add("as-console-type-label");
-                            span.appendChild(typeLabel);
-                        }
-                        span.classList.add("as-console-collapsed-value");
-                        domValueMap.set(span, value);
-                        span.appendChild(document.createTextNode(` ${caps[0]}`));
-                        let ellipsis = document.createElement("span");
-                        ellipsis.textContent = "…";
-                        ellipsis.classList.add("as-console-ellipsis");
-                        span.appendChild(ellipsis);
-                        span.classList.add("as-console-expandable-value");
-                        span.addEventListener("click", expandObjectDom);
-                        span.appendChild(document.createTextNode(caps[1]));
-                        break;
-                }
+            switch (type) {
+                case 'Null':
+                case 'Undefined':
+                    span.textContent = String(value);
+                    span.classList.add("as-console-nil-value");
+                    break;
+                case 'RegExp':
+                    span.classList.add("as-console-literal-value");
+                    span.textContent = String(value);
+                    break;
+                case 'String':
+                    span.textContent = value;
+                    if (!config.noStyle) {
+                        span.classList.add("as-console-string-value");
+                    }
+                    break;
+                case 'Boolean':
+                case 'Number':
+                    span.textContent = String(value);
+                    span.classList.add("as-console-keyword");
+                    break;
+                default:
+                    let caps = type === "Array" ? "[]" : "{}";
+                    if (typeof value === "function") {
+                        let functionSymbol = document.createElement("span");
+                        functionSymbol.textContent = "ƒ "
+                        functionSymbol.classList.add("as-console-keyword");
+                        span.appendChild(functionSymbol);
+                        let functionPreview = document.createElement("span");
+                        functionPreview.classList.add("as-console-function-preview");
+                        functionPreview.textContent = `${value.name}(${getArgs(value).join(", ")})`;
+                        span.appendChild(functionPreview)
+                    } else if (type === "Date") {
+                        let typeLabel = document.createElement("span");
+                        typeLabel.textContent = formatDate(value);
+                        typeLabel.classList.add("as-console-type-label");
+                        span.appendChild(typeLabel);
+                    } else {
+                        let typeLabel = document.createElement("span");
+                        typeLabel.textContent = type;
+                        typeLabel.classList.add("as-console-type-label");
+                        span.appendChild(typeLabel);
+                    }
+                    span.classList.add("as-console-collapsed-value");
+                    domValueMap.set(span, value);
+                    span.appendChild(document.createTextNode(` ${caps[0]}`));
+                    let ellipsis = document.createElement("span");
+                    ellipsis.textContent = "…";
+                    ellipsis.classList.add("as-console-ellipsis");
+                    span.appendChild(ellipsis);
+                    span.classList.add("as-console-expandable-value");
+                    span.addEventListener("click", expandObjectDom);
+                    span.appendChild(document.createTextNode(caps[1]));
+                    break;
             }
 
             return span;
@@ -294,7 +312,7 @@
         let row = document.createElement("div");
         row.className = "as-console-row";
 
-        row.setAttribute("data-date", formatDate(new Date()));
+        row.setAttribute("data-date", formatDate(new Date()).slice(11));
 
         let code = row.appendChild(document.createElement("code"));
         code.className = "as-console-row-code";
@@ -304,7 +322,7 @@
         } else {
             args.forEach((arg, i) => {
                 if (i > 0) {
-                    code.appendChild(document.createTextNode(", "));
+                    code.appendChild(document.createTextNode(" "));
                 }
                 code.appendChild(domify(arg));
             });
