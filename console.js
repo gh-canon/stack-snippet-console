@@ -154,6 +154,18 @@
                 return properties;
             })(Object.getOwnPropertyDescriptors(value));
 
+            if (value[Symbol.iterator]) {
+                for (let i = 0, ln = value.length; i < ln; i++) {
+                    let name = String(i);
+                    if (!descriptors.some(d => d.name === name)) {
+                        descriptors.push({
+                            name: name,
+                            enumerable: true
+                        });
+                    }
+                }
+            }
+
             let rxNumeric = /^[0-9]+$/;
 
             descriptors.sort((a, b) => {
