@@ -165,9 +165,10 @@
                 try {
                     propertyValue = value[descriptor.name];
                 } catch (err) {
-                    propertyValue == err.message;
+                    propertyValue = err.message;
                     failedAccess = true;
                 }
+
                 ul.appendChild(getPropertyEntry(descriptor.name, propertyValue, descriptor.enumerable, failedAccess));
             }
             
