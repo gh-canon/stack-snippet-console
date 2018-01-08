@@ -54,7 +54,7 @@
         ".as-console-row-code, .as-console-row:after { -webkit-animation: flash 1s; -moz-animation: flash 1s; -ms-animation: flash 1s; animation: flash 1s; }",
         ".as-console-dictionary { margin: 0; padding: 0 0 0 20px; background-color: #fff; list-style: none; white-space: normal; }",
         ".as-console-dictionary-entry { display: flex; flex-direction: row; }",
-        ".as-console-dictionary-label { color: #C0C; }",
+        ".as-console-dictionary-label { color: #831393; }",
         ".as-console-dictionary-label::after { content: ':'; margin-right: 6px; }",
         ".as-console-expandable-value { cursor: default; white-space: nowrap; }",
         ".as-console-expandable-value::before { content: ''; display: inline-block; margin: 0 4px 0 0; width: 8.316px; height: 7.2px; background-size: 100%; background-repeat: no-repeat; background-position: center center; background-image: url('data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IiB3aWR0aD0iMTMuODU2cHgiIGhlaWdodD0iMTJweCIgdmlld0JveD0iMCAwIDEzLjg1NiAxMiIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgMTMuODU2IDEyIj48cG9seWdvbiBmaWxsPSIjQ0NDQ0NDIiBwb2ludHM9IjEzLjg1NiwwIDYuOTI4LDEyIDAsMCAiLz48L3N2Zz4='); }",
@@ -66,7 +66,7 @@
         ".as-console-literal-value, .as-console-string-value { color: #C00; }",
         ".as-console-string-value::before, .as-console-string-value::after { content: '\"'; color: #000; }",
         ".as-console-keyword { color: #00F; }",
-        ".as-console-non-enumerable-value .as-console-dictionary-label { color: #DAD; }",
+        ".as-console-non-enumerable-value .as-console-dictionary-label { color: #b571be; }",
         ".as-console-function-preview { font-style: italic; }"
     ].join("\n");
 
