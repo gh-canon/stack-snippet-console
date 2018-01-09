@@ -91,11 +91,12 @@
 
         function toggleExpansion(e) {
             if (e.target === this || (e.target.parentNode === this && e.target.tagName !== "UL")) {
-
                 if (this.classList.contains("as-console-collapsed-value")) {
+                    expandObjectDom.call(this, e);
                     this.classList.remove("as-console-collapsed-value")
                     this.classList.add("as-console-expanded-value")
                 } else {
+                    domValueMap.delete(this.removeChild(this.children[1]));
                     this.classList.remove("as-console-expanded-value")
                     this.classList.add("as-console-collapsed-value")
                 }
@@ -145,6 +146,75 @@
             } while (element = element.parentNode);
         }
 
+        const rxNumeric = /^[0-9]+$/;
+        const rxConstants = /^[A-Z0-9_]+$/i;
+        
+
+        function sortPropertyDescriptors(a, b) {
+            if (a.enumerable > b.enumerable) {
+                return -1;
+            } else if (a.enumerable < b.enumerable) {
+                return 1;
+            } else {
+                let aNumeric = rxNumeric.test(a.name),
+                    bNumeric = rxNumeric.test(b.name),
+                    aVal = aNumeric ? parseInt(a.name, 10) : a.name,
+                    bVal = bNumeric ? parseInt(b.name, 10) : b.name,
+                    aIsNaN = isNaN(aVal) || !aNumeric,
+                    bIsNaN = isNaN(bVal) || !bNumeric;
+
+                if (aIsNaN < bIsNaN) {
+                    return -1;
+                } else if (aIsNaN > bIsNaN) {
+                    return 1;
+                } else {
+                    return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+                }
+            }
+        }
+
+        function getPropertyDescriptors(obj) {
+
+            let descriptors = [],
+                protoChain = new WeakMap(),
+                depth = 0;
+            
+            try {
+                if (obj[Symbol.iterator]) {
+                    for (let i = 0, ln = obj.length; i < ln; i++) {
+                        descriptors.push({
+                            name: String(i),
+                            enumerable: true
+                        });
+                    }
+                }
+            } catch (err) {
+                /* failed iteration */
+            }            
+
+            do {
+                protoChain.set(obj, true);
+                let _properties = Object.getOwnPropertyDescriptors(obj);
+                for (let name in _properties) {
+                    if (name === "__proto__") continue;
+                    if (!descriptors.some(d => d.name === name)) {
+                        let prop = _properties[name];
+                        if (depth === 0 || (prop.enumerable && !(/^[A-Z0-9]+(_[A-Z0-9]+)*$/.test(name) && !prop.configurable && !prop.writable))) {
+                            prop.name = name;
+                            descriptors.push(prop);
+                        }
+                    }
+                }
+                obj = Object.getPrototypeOf(obj);
+                depth++;
+            } while (obj && !protoChain.has(obj));
+
+            descriptors.sort(sortPropertyDescriptors);
+
+            return descriptors;
+        }
+
+
         function expandObjectDom() {
 
             let span,
@@ -154,53 +224,7 @@
 
             ul.classList.add("as-console-dictionary");
 
-            let descriptors = (descriptors => {
-                let properties = [];
-                for (let name in descriptors) {
-                    let descriptor = descriptors[name];
-                    descriptor.name = name;
-                    properties.push(descriptor);
-                }
-                return properties;
-            })(Object.getOwnPropertyDescriptors(value));
-
-            if (value[Symbol.iterator]) {
-                for (let i = 0, ln = value.length; i < ln; i++) {
-                    let name = String(i);
-                    if (!descriptors.some(d => d.name === name)) {
-                        descriptors.push({
-                            name: name,
-                            enumerable: true
-                        });
-                    }
-                }
-            }
-
-            
-            let rxNumeric = /^[0-9]+$/;
-
-            descriptors.sort((a, b) => {
-                if (a.enumerable > b.enumerable) {
-                    return -1;
-                } else if (a.enumerable < b.enumerable) {
-                    return 1;
-                } else {
-                    let aNumeric = rxNumeric.test(a.name),
-                        bNumeric = rxNumeric.test(b.name),
-                        aVal = aNumeric ? parseInt(a.name, 10) : a.name,
-                        bVal = bNumeric ? parseInt(b.name, 10) : b.name,
-                        aIsNaN = isNaN(aVal) || !aNumeric,
-                        bIsNaN = isNaN(bVal) || !bNumeric;
-
-                    if (aIsNaN < bIsNaN) {
-                        return -1;
-                    } else if (aIsNaN > bIsNaN) {
-                        return 1;
-                    } else {
-                        return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
-                    }
-                }
-            });
+            let descriptors = getPropertyDescriptors(value);                     
 
             for (let descriptor of descriptors) {
 
@@ -234,8 +258,8 @@
             this.classList.remove("as-console-collapsed-value");
             this.classList.add("as-console-expanded-value");
             this.insertBefore(ul, this.lastElementChild);
-            this.removeEventListener("click", expandObjectDom);
-            this.addEventListener("click", toggleExpansion);
+            //this.removeEventListener("click", expandObjectDom);
+            //this.addEventListener("click", toggleExpansion);
         }
 
         function getArgs(func) /* source: humbletim @ https://stackoverflow.com/a/31194949/621962 */ {
@@ -308,7 +332,7 @@
                     ellipsis.classList.add("as-console-ellipsis");
                     span.appendChild(ellipsis);
                     span.classList.add("as-console-expandable-value");
-                    span.addEventListener("click", expandObjectDom);
+                    span.addEventListener("click", toggleExpansion);
                     span.appendChild(document.createTextNode(caps[1]));
                     break;
             }
@@ -336,6 +360,10 @@
                     switch (char) {
                         case "%":
                             buffer.push("%");
+                            break;
+                        case "f":
+                            flushMessageBuffer(buffer, message);
+                            message.appendChild(domify(parseFloat(args[argumentIndex++])));
                             break;
                         case "d":
                         case "i":                            
@@ -457,12 +485,13 @@
         let e = args[0];
 
         if (e instanceof Error) {
-            entry = createLogEntry({
-                message: e.message,
-                filename: e.filename,
-                lineno: e.lineno,
-                colno: e.colno
-            });
+            //entry = createLogEntry({
+            //    message: e.message,
+            //    filename: e.filename,
+            //    lineno: e.lineno,
+            //    colno: e.colno
+            //});
+            entry = createLogEntry(e);
         } else {
             entry = createLogEntry(...args)
         }
@@ -613,13 +642,8 @@
     };
 
     window.addEventListener("error", function (e) {
-        createLogEntry({
-            message: e.message,
-            filename: e.filename,
-            lineno: e.lineno,
-            colno: e.colno
-        }).children[0].classList.add("as-console-error");
-
+        createLogEntry(e).children[0].classList.add("as-console-error");
+        _log(e);
         showConsole(1);
     });
 
