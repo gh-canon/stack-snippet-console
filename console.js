@@ -53,7 +53,6 @@
         "@keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
         ".as-console-row-code, .as-console-row:after { -webkit-animation: flash 1s; -moz-animation: flash 1s; -ms-animation: flash 1s; animation: flash 1s; }",
         ".as-console-dictionary { margin: 0; padding: 0 0 0 20px; background-color: #fff; list-style: none; white-space: normal; }",
-        ".as-console-dictionary-entry { display: flex; flex-direction: row; }",
         ".as-console-dictionary-label { color: #831393; }",
         ".as-console-dictionary-label::after { content: ':'; margin-right: 6px; }",
         ".as-console-expandable-value { cursor: default; white-space: nowrap; }",
@@ -147,7 +146,7 @@
         }
 
         const rxNumeric = /^[0-9]+$/;
-        const rxConstants = /^[A-Z0-9_]+$/i;
+        const rxPossibleConstant = /^[A-Z0-9]+(_[A-Z0-9]+)*$/;
         
 
         function sortPropertyDescriptors(a, b) {
@@ -199,7 +198,7 @@
                     if (name === "__proto__") continue;
                     if (!descriptors.some(d => d.name === name)) {
                         let prop = _properties[name];
-                        if (depth === 0 || (prop.enumerable && !(/^[A-Z0-9]+(_[A-Z0-9]+)*$/.test(name) && !prop.configurable && !prop.writable))) {
+                        if (depth === 0 || (prop.enumerable && !(rxPossibleConstant.test(name) && !prop.configurable && !prop.writable))) {
                             prop.name = name;
                             descriptors.push(prop);
                         }
