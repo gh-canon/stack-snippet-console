@@ -96,7 +96,7 @@
                     this.classList.remove("as-console-collapsed-value")
                     this.classList.add("as-console-expanded-value")
                 } else {
-                    domValueMap.delete(this.removeChild(this.children[1]));
+                    domValueMap.delete(this.removeChild(this.children[this.children.length - 2]));
                     this.classList.remove("as-console-expanded-value")
                     this.classList.add("as-console-collapsed-value")
                 }
