@@ -72,7 +72,9 @@
     document.head.appendChild(style);
 
     function formatDate(d) {
-        d = new Date(d.valueOf() - d.getTimezoneOffset() * 60000);
+        let ms = d.valueOf();
+        if (isNaN(ms)) return "Invalid Date";
+        d = new Date(ms - d.getTimezoneOffset() * 60000);
         let result = d.toISOString().replace("Z", "").replace("T", " ");
         return result;
     }
@@ -145,9 +147,7 @@
             } while (element = element.parentNode);
         }
 
-        const rxNumeric = /^[0-9]+$/;
-        const rxPossibleConstant = /^[A-Z0-9]+(_[A-Z0-9]+)*$/;
-        
+        const rxNumeric = /^[0-9]+$/;        
 
         function sortPropertyDescriptors(a, b) {
             if (a.enumerable > b.enumerable) {
@@ -198,7 +198,7 @@
                     if (name === "__proto__") continue;
                     if (!descriptors.some(d => d.name === name)) {
                         let prop = _properties[name];
-                        if (depth === 0 || (prop.enumerable && !(rxPossibleConstant.test(name) && !prop.configurable && !prop.writable))) {
+                        if (depth === 0 || (prop.enumerable && prop.configurable)) {
                             prop.name = name;
                             descriptors.push(prop);
                         }
@@ -642,7 +642,7 @@
 
     window.addEventListener("error", function (e) {
         createLogEntry(e).children[0].classList.add("as-console-error");
-        _log(e);
+        _log.call(console, e);
         showConsole(1);
     });
 
