@@ -16,6 +16,7 @@
     const _timeEnd = console.timeEnd;
     const _count = console.count;
     const _dirxml = console.dirxml;
+    const _table = console.table;
 
     const timeKeeper = {};
     const countKeeper = {};
@@ -41,7 +42,7 @@
         ".as-console { border: 1px solid #ccc; display: table; width: 100%; border-collapse: collapse; }",
         ".as-console-row { display: table-row; font-family: monospace; font-size: 10pt; }",
         ".as-console-timestamps .as-console-row:after { display: table-cell; padding: 3px 6px; color: rgba(0,0,0,.35); border: 1px solid #ccc; content: attr(data-date); vertical-align: top; }",
-        ".as-console-row + .as-console-row > * { border: 1px solid #ccc; }",
+        ".as-console-row + .as-console-row > * { border: 1px solid #f0f0f0; }",
         ".as-console-row-code { width: 100%; white-space: pre-wrap; padding: 3px 5px; display: table-cell; font-family: monospace; font-size: 13px; vertical-align: middle; }",
         ".as-console-error:before { content: 'Error: '; color: #f00; }",
         ".as-console-assert:before { content: 'Assertion failed: '; color: #f00; }",
@@ -66,7 +67,12 @@
         ".as-console-string-value::before, .as-console-string-value::after { content: '\"'; color: #000; }",
         ".as-console-keyword { color: #00F; }",
         ".as-console-non-enumerable-value > .as-console-dictionary-label { color: #b571be; }",
-        ".as-console-function-preview { font-style: italic; }"
+        ".as-console-function-preview { font-style: italic; }",
+        ".as-console-table { width: 100%; table-layout: fixed; border-collapse: collapse; background-color: #fff; border: 1px solid #aaa; }",
+        ".as-console-table thead { background-color: #f3f3f3; border-bottom: 1px solid #aaa; }",
+        ".as-console-table th { font-weight: normal; text-align: left; }",
+        ".as-console-table th, .as-console-table td { padding: 3px 6px; border-style: solid; border-width: 0 1px; border-color: #aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }",
+        ".as-console-table tbody tr:nth-of-type(even) {background-color: #f3f7fd;}"
     ].join("\n");
 
     document.head.appendChild(style);
@@ -323,16 +329,18 @@
                         typeLabel.classList.add("as-console-type-label");
                         span.appendChild(typeLabel);
                     }
-                    span.classList.add("as-console-collapsed-value");
-                    domValueMap.set(span, value);
-                    span.appendChild(document.createTextNode(` ${caps[0]}`));
-                    let ellipsis = document.createElement("span");
-                    ellipsis.textContent = "…";
-                    ellipsis.classList.add("as-console-ellipsis");
-                    span.appendChild(ellipsis);
-                    span.classList.add("as-console-expandable-value");
-                    span.addEventListener("click", toggleExpansion);
-                    span.appendChild(document.createTextNode(caps[1]));
+                    if (!config.noExpand) {
+                        span.classList.add("as-console-collapsed-value");
+                        domValueMap.set(span, value);
+                        span.appendChild(document.createTextNode(` ${caps[0]}`));
+                        let ellipsis = document.createElement("span");
+                        ellipsis.textContent = "…";
+                        ellipsis.classList.add("as-console-ellipsis");
+                        span.appendChild(ellipsis);
+                        span.classList.add("as-console-expandable-value");
+                        span.addEventListener("click", toggleExpansion);
+                        span.appendChild(document.createTextNode(caps[1]));
+                    }
                     break;
             }
 
@@ -484,12 +492,6 @@
         let e = args[0];
 
         if (e instanceof Error) {
-            //entry = createLogEntry({
-            //    message: e.message,
-            //    filename: e.filename,
-            //    lineno: e.lineno,
-            //    colno: e.colno
-            //});
             entry = createLogEntry(e);
         } else {
             entry = createLogEntry(...args)
@@ -542,6 +544,206 @@
         createLogEntry("%s", output);
 
         showConsole(1);
+    };
+
+    function getEnumerablePropertyNames(obj, max) {
+
+        var arr = [];
+
+        max = max || Infinity;
+
+        do {
+            for (let prop of Object.getOwnPropertyNames(obj)) {
+                if (Object.getOwnPropertyDescriptor(obj, prop).enumerable && !arr.includes(prop)) {
+                    arr.push(prop);
+                    if (arr.length >= max) {
+                        break;
+                    }
+                }
+            }
+        } while (arr.length < max && (obj = Object.getPrototypeOf(obj)) && obj !== Object.prototype);
+
+        return arr;
+    }
+
+
+    function getPropertyNames(obj, max) {        
+
+        var arr = [];
+
+        max = max || Infinity;               
+
+        do {
+            for (let prop of Object.getOwnPropertyNames(obj)) {
+                if (!arr.includes(prop)) {
+                    arr.push(prop);
+                    if (arr.length >= max) {
+                        break;
+                    }
+                }
+            }
+        } while (arr.length < max && (obj = Object.getPrototypeOf(obj)) && obj !== Object.prototype);
+
+        return arr;
+    }
+
+    function isScalar(value) {
+        return value == null || ("function" !== typeof value && ("object" !== typeof value || Object.prototype.toString.call(value) === "[object Date]"));
+    }
+
+    function isArray(value) {
+        return Object.prototype.toString.call(value) === "[object Array]";
+    }
+
+    function hasScalarValues(obj) {
+        if (isArray(obj)) {
+            return obj.some(isScalar);
+        } else {
+            for (let prop in getPropertyNames(obj)) {
+                if (isScalar(obj[prop])) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    function iterate(object, delegate) {
+        if (isArray(object)) {
+            for (let i = 0, ln = object.length; i < ln; i++) {
+                if (delegate(i, object[i]) === false) {
+                    break;
+                }
+            }
+        } else {
+            for (let prop of getPropertyNames(object)) {
+                if (delegate(prop, object[prop]) === false) {
+                    break;
+                }
+            }
+        }
+    }
+
+    console.table = function (data, columns) {  
+
+        let row = document.createElement("div");
+        row.className = "as-console-row";
+
+        row.setAttribute("data-date", formatDate(new Date()).slice(11));
+
+        let code = row.appendChild(document.createElement("code"));
+        code.className = "as-console-row-code";
+
+        let props = [];
+
+        let table = document.createElement("table");
+
+        table.className = "as-console-table";
+
+        let thead = document.createElement("thead");
+
+        let tbody = document.createElement("tbody");        
+
+        let tr = document.createElement("tr");
+
+        let td = document.createElement("th");
+
+        td.textContent = "(index)";
+
+        tr.appendChild(td);        
+
+        let scalarIndex = null;
+
+        let rows = 0;
+
+        iterate(data, function (index, item) {
+            if (isScalar(item)) {
+                if (!props.includes(null)) {
+                    props.push(null);
+                }
+            } else {
+                for (let prop of getEnumerablePropertyNames(item)) {
+                    if (!props.includes(prop)) {
+                        props.push(prop);
+                    }
+                }
+            }
+        });
+
+        if (columns) {
+            columns = columns.filter(c => props.includes(c)); 
+            if (props.includes(null)) {
+                columns.push(null);
+            }
+        } else {
+            columns = props;
+        }        
+
+        if (columns.length === 0) {
+            columns.push(null);
+        } else {
+            columns.splice(20);
+        }
+
+        thead.appendChild(tr);
+
+        table.appendChild(thead);
+
+        for (let columnName of columns) {
+            td = document.createElement("th");
+            if (columnName === null) {
+                td.textContent = "Value";
+            } else {
+                td.textContent = columnName;
+            }
+            tr.appendChild(td);
+        }
+
+        iterate(data, function (index, item) {
+
+            tr = document.createElement("tr");
+            td = document.createElement("th");
+            td.textContent = index;
+            tr.appendChild(td);
+
+            if (isScalar(item)) {
+                for (let column of columns) {
+                    td = document.createElement("td");
+                    if (column === null) {
+                        td.appendChild(domify(item, { noExpand: true }));
+                    }
+                    tr.appendChild(td);
+                }
+            } else {
+                for (let column of columns) {
+                    td = document.createElement("td");
+                    if (column !== null && column in item) {
+                        td.appendChild(domify(item[column], { noExpand: true }));
+                    }
+                    tr.appendChild(td);
+                }
+            }
+
+            tbody.appendChild(tr);
+
+            return ++rows < 1000;
+        });
+
+        table.appendChild(tbody);
+
+        code.appendChild(table);
+
+        //code.appendChild(domify(data));
+
+        row.appendChild(code);
+
+        div.appendChild(row);
+
+        truncateEntries();
+
+        if (autoScroll) wrapper.scrollTop = row.offsetTop;
+
+        _table && _table.apply(console, arguments);
     };
 
     console.clear = function () {

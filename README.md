@@ -4,7 +4,7 @@ A simple console visualizer for the DOM. Intercepts console logging calls and ro
 This was developed for use in Stack-Snippets on the StackExchange network; though, it should be widely applicable.
 
 Notes:
-- All calls to `console.log()` (`info()`, `warn()`, `error()`, and `clear()`)  are passed along to the actual console
+- All calls to `console.log()` (`info()`, `warn()`, `error()`, `table()`, and `clear()`)  are passed along to the actual console
 - Loosely imitates Chrome's output
 - Objects are rendered in a lazy-evaluated tree-view
 - Works by injecting elements into the page... so, it obviously pollutes the DOM.
