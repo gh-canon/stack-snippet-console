@@ -546,49 +546,54 @@
         showConsole(1);
     };
 
-    function getEnumerablePropertyNames(obj, max) {
+    function getEnumerablePropertyNames(obj) {
 
-        var arr = [];
-
-        max = max || Infinity;
+        let arr = [];
 
         do {
             for (let prop of Object.getOwnPropertyNames(obj)) {
                 if (Object.getOwnPropertyDescriptor(obj, prop).enumerable && !arr.includes(prop)) {
                     arr.push(prop);
-                    if (arr.length >= max) {
-                        break;
-                    }
                 }
             }
-        } while (arr.length < max && (obj = Object.getPrototypeOf(obj)) && obj !== Object.prototype);
+        } while ((obj = Object.getPrototypeOf(obj)) && obj !== Object.prototype);
 
         return arr;
     }
 
 
-    function getPropertyNames(obj, max) {        
+    function getPropertyNames(obj) {        
 
-        var arr = [];
-
-        max = max || Infinity;               
+        let arr = [];               
 
         do {
             for (let prop of Object.getOwnPropertyNames(obj)) {
                 if (!arr.includes(prop)) {
                     arr.push(prop);
-                    if (arr.length >= max) {
-                        break;
-                    }
                 }
             }
-        } while (arr.length < max && (obj = Object.getPrototypeOf(obj)) && obj !== Object.prototype);
+        } while ((obj = Object.getPrototypeOf(obj)) && obj !== Object.prototype);
 
         return arr;
     }
 
     function isScalar(value) {
-        return value == null || ("function" !== typeof value && ("object" !== typeof value || Object.prototype.toString.call(value) === "[object Date]"));
+        if (value == null) {
+            return true;
+        }
+        switch (typeof value) {
+            case "function":
+                return false;
+            case "object":
+                switch (Object.prototype.toString.call(value)) {
+                    case "[object Date]":
+                    case "[object RegExp]":
+                        return true;
+                    default:
+                        return false;
+                }
+        }
+        return true;
     }
 
     function isArray(value) {
@@ -732,8 +737,6 @@
         table.appendChild(tbody);
 
         code.appendChild(table);
-
-        //code.appendChild(domify(data));
 
         row.appendChild(code);
 
