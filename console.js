@@ -616,14 +616,22 @@
     function iterate(object, delegate) {
         if (isArray(object)) {
             for (let i = 0, ln = object.length; i < ln; i++) {
-                if (delegate(i, object[i]) === false) {
-                    break;
+                try {
+                    if (delegate(i, object[i]) === false) {
+                        break;
+                    }
+                } catch (err) {
+                    // failed iteration
                 }
             }
         } else {
             for (let prop of getPropertyNames(object)) {
-                if (delegate(prop, object[prop]) === false) {
-                    break;
+                try {
+                    if (delegate(prop, object[prop]) === false) {
+                        break;
+                    }
+                } catch (err) {
+                    // failed iteration
                 }
             }
         }
