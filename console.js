@@ -48,14 +48,14 @@
         ".as-console-assert:before { content: 'Assertion failed: '; color: #f00; }",
         ".as-console-info:before { content: 'Info: '; color: #00f; }",
         ".as-console-warning:before { content: 'Warning: '; color: #e90 }",
-        "@-webkit-keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
-        "@-moz-keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
-        "@-ms-keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
-        "@keyframes flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
-        ".as-console-row-code, .as-console-row:after { -webkit-animation: flash 1s; -moz-animation: flash 1s; -ms-animation: flash 1s; animation: flash 1s; }",
+        "@-webkit-keyframes as-console-flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
+        "@-moz-keyframes as-console-flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
+        "@-ms-keyframes as-console-flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
+        "@keyframes as-console-flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
+        ".as-console-row-code, .as-console-row:after { -webkit-animation: as-console-flash 1s; -moz-animation: flash 1s; -ms-animation: as-console-flash 1s; animation: as-console-flash 1s; }",
         ".as-console-dictionary { margin: 0; padding: 0 0 0 20px; background-color: #fff; list-style: none; white-space: normal; }",
         ".as-console-dictionary-label { color: #831393; }",
-        ".as-console-dictionary-label::after { content: ':'; margin-right: 6px; }",
+        ".as-console-dictionary-label::after { content: ':'; margin-right: 6px; font-style: normal;}",
         ".as-console-expandable-value { cursor: default; white-space: nowrap; }",
         ".as-console-expandable-value::before { content: ''; display: inline-block; margin: 0 4px 0 0; width: 8.316px; height: 7.2px; background-size: 100%; background-repeat: no-repeat; background-position: center center; background-image: url('data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IiB3aWR0aD0iMTMuODU2cHgiIGhlaWdodD0iMTJweCIgdmlld0JveD0iMCAwIDEzLjg1NiAxMiIgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgMTMuODU2IDEyIj48cG9seWdvbiBmaWxsPSIjQ0NDQ0NDIiBwb2ludHM9IjEzLjg1NiwwIDYuOTI4LDEyIDAsMCAiLz48L3N2Zz4='); }",
         ".as-console-collapsed-value::before { transform-origin: center center; transform: rotate(-90deg); margin: 0 4px 1px 0;  }",
@@ -63,8 +63,8 @@
         ".as-console-ellipsis { display: none; }",
         ".as-console-collapsed-value .as-console-ellipsis { display: inline; }",
         ".as-console-type-label, .as-console-nil-value { color: #808080; }",
-        ".as-console-literal-value, .as-console-string-value { color: #C00; }",
-        ".as-console-string-value::before, .as-console-string-value::after { content: '\"'; color: #000; }",
+        ".as-console-literal-value, .as-console-expandable-value .as-console-string-value { color: #C00; }",
+        ".as-console-expandable-value .as-console-string-value::before, .as-console-expandable-value .as-console-string-value::after { content: '\"'; color: #000; }",
         ".as-console-keyword { color: #00F; }",
         ".as-console-non-enumerable-value > .as-console-dictionary-label { color: #b571be; }",
         ".as-console-function-preview { font-style: italic; }",
@@ -72,7 +72,8 @@
         ".as-console-table thead { background-color: #f3f3f3; border-bottom: 1px solid #aaa; }",
         ".as-console-table th { font-weight: normal; text-align: left; }",
         ".as-console-table th, .as-console-table td { padding: 3px 6px; border-style: solid; border-width: 0 1px; border-color: #aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }",
-        ".as-console-table tbody tr:nth-of-type(even) {background-color: #f3f7fd;}"
+        ".as-console-table tbody tr:nth-of-type(even) {background-color: #f3f7fd;}",
+        ".as-console-helper-property > .as-console-dictionary-label {font-style: italic;}"
     ].join("\n");
 
     document.head.appendChild(style);
@@ -249,6 +250,12 @@
                     // thanks, M$...
                 }
             }
+
+            if (value instanceof Map) {
+                ul.appendChild(getPropertyEntry("[[Entries]]", [...value].map(o => ({ key: o[0], value: o[1] })), true, false)).classList.add("as-console-helper-property");
+            } else if (value instanceof Set) {
+                ul.appendChild(getPropertyEntry("[[Entries]]", [...value], true, false)).classList.add("as-console-helper-property");
+            }
             
             if (typeof value !== "function") {
                 let proto = Object.getPrototypeOf(value);                
@@ -284,7 +291,7 @@
             let type = Object.prototype.toString.call(value).slice(8, -1),
                 span = document.createElement("span");
 
-            span.classList.add("as-console-value");            
+            span.classList.add("as-console-value");
 
             switch (type) {
                 case 'Null':
@@ -293,6 +300,7 @@
                     span.classList.add("as-console-nil-value");
                     break;
                 case 'RegExp':
+                case 'Symbol':
                     span.classList.add("as-console-literal-value");
                     span.textContent = String(value);
                     break;
@@ -308,6 +316,19 @@
                     span.classList.add("as-console-keyword");
                     break;
                 default:
+                    if (value instanceof Error) {
+                        let errorString = `${value.name}: ${value.message}`;
+                        let stack = value.stack;
+                        if (stack) {
+                            if (stack.indexOf(errorString) === 0) {
+                                errorString = stack;
+                            } else {
+                                errorString += "\n" + stack;
+                            }
+                        }
+                        span.textContent = errorString;
+                        break;
+                    }
                     let caps = type === "Array" ? "[]" : "{}";
                     if (typeof value === "function") {
                         let functionSymbol = document.createElement("span");
