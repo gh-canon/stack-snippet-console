@@ -52,7 +52,7 @@
         "@-moz-keyframes as-console-flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
         "@-ms-keyframes as-console-flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
         "@keyframes as-console-flash { 0% { background: rgba(255,240,0,.25); } 100% { background: none; } }",
-        ".as-console-row-code, .as-console-row:after { -webkit-animation: as-console-flash 1s; -moz-animation: flash 1s; -ms-animation: as-console-flash 1s; animation: as-console-flash 1s; }",
+        ".as-console-row-code, .as-console-row:after { -webkit-animation: as-console-flash 1s; -moz-animation: as-console-flash 1s; -ms-animation: as-console-flash 1s; animation: as-console-flash 1s; }",
         ".as-console-dictionary { margin: 0; padding: 0 0 0 20px; background-color: #fff; list-style: none; white-space: normal; }",
         ".as-console-dictionary-label { color: #831393; }",
         ".as-console-dictionary-label::after { content: ':'; margin-right: 6px; font-style: normal;}",
