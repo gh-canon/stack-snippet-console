@@ -64,6 +64,7 @@
         ".as-console-collapsed-value .as-console-ellipsis { display: inline; }",
         ".as-console-type-label, .as-console-nil-value { color: #808080; }",
         ".as-console-literal-value, .as-console-expandable-value .as-console-string-value { color: #C00; }",
+        ".as-console-bigint-value { color: #005d00; }",
         ".as-console-expandable-value .as-console-string-value::before, .as-console-expandable-value .as-console-string-value::after { content: '\"'; color: #000; }",
         ".as-console-keyword { color: #00F; }",
         ".as-console-non-enumerable-value > .as-console-dictionary-label { color: #b571be; }",
@@ -315,6 +316,10 @@
                 case 'Number':
                     span.textContent = String(value);
                     span.classList.add("as-console-keyword");
+                    break;
+                case 'BigInt':
+                    span.textContent = value + 'n';
+                    span.classList.add("as-console-bigint-value");
                     break;
                 default:
                     if (value instanceof Error) {
